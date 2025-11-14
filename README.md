@@ -51,3 +51,11 @@ Clean up binary from the last build:
 ```bash
 make clean
 ```
+
+
+// ساختار بهبود یافته بلک‌لیست
+{
+  "sid": "encoded_token_string",
+  "reason": "logout", // "logout", "role_change", "security", "password_change"
+  "action_required": "re_login" // "refresh_token", "re_login", "security_check"
+}
