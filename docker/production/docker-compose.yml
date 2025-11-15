@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    restart: unless-stopped
+    ports:
+      - ${PORT}:${PORT}
+    env_file:
+      - ./.env
+    depends_on:
+      psql_bp:
+        condition: service_healthy
+    networks:
+      - blueprint
+  psql_bp:
+    image: postgres:18-alpine:3.22
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${BLUEPRINT_DB_DATABASE}
+      POSTGRES_USER: ${BLUEPRINT_DB_USERNAME}
+      POSTGRES_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
+    ports:
+      - "${BLUEPRINT_DB_PORT}:5432"
+    volumes:
+      - psql_volume_bp:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${BLUEPRINT_DB_USERNAME} -d ${BLUEPRINT_DB_DATABASE}'"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - blueprint
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    entrypoint: 
+      
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  psql_volume_bp:
+  redis_data:
+networks:
+  blueprint:
