@@ -3,9 +3,9 @@ package database
 import (
 	"context"
 	"fmt"
-	"ganjineh-auth/internal/repositories/db"
+	"ganjineh-auth/internal/config"
+	"github.com/google/wire"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -14,43 +14,24 @@ import (
 )
 
 // Service represents a service that interacts with a database.
-type ServiceP interface {
+type ServicePostgresInterface interface {
 	// Health returns a map of health status information.
 	Health() map[string]string
 
 	// Close terminates the database connection.
 	Close() error
 	
-	// GetQueries returns the queries instance for database operations
-	GetQueries() *db.Queries
-	
-	// GetPool returns the connection pool (برای موارد پیشرفته)
-	GetPool() *pgxpool.Pool
 }
 
-type serviceP struct {
-	pool    *pgxpool.Pool
-	queries *db.Queries
+type ServicePostgresStruct struct {
+	Pool    *pgxpool.Pool
 }
 
-var (
-	database   = os.Getenv("BLUEPRINT_DB_DATABASE")
-	password   = os.Getenv("BLUEPRINT_DB_PASSWORD")
-	username   = os.Getenv("BLUEPRINT_DB_USERNAME")
-	port       = os.Getenv("BLUEPRINT_DB_PORT")
-	host       = os.Getenv("BLUEPRINT_DB_HOST")
-	schema     = os.Getenv("BLUEPRINT_DB_SCHEMA")
-	dbInstance *serviceP
-)
 
-func NewP() ServiceP {
-	// Reuse Connection
-	if dbInstance != nil {
-		return dbInstance
-	}
+func NewPostgresConnction(con *config.StructConfig) *ServicePostgresStruct {
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", 
-		username, password, host, port, database, schema)
+		con.BLUEPRINT_DB_USERNAME, con.BLUEPRINT_DB_PASSWORD, con.BLUEPRINT_DB_HOST, con.BLUEPRINT_DB_PORT, con.BLUEPRINT_DB_DATABASE, con.BLUEPRINT_DB_SCHEMA)
 
 	// Create connection pool config
 	config, err := pgxpool.ParseConfig(connStr)
@@ -77,38 +58,31 @@ func NewP() ServiceP {
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatal("Failed to ping database: ", err)
 	}
-
-	// Create queries instance
-	queries := db.New(pool)
-
-	dbInstance = &serviceP{
-		pool:    pool,
-		queries: queries,
-	}
 	
-	log.Printf("Connected to PostgreSQL database: %s", database)
-	return dbInstance
+	log.Printf("Connected to PostgreSQL database")
+	return &ServicePostgresStruct{
+		Pool: pool,
+	}
 }
 
-// GetQueries returns the queries instance for database operations
-func (s *serviceP) GetQueries() *db.Queries {
-	return s.queries
-}
 
-// GetPool returns the connection pool
-func (s *serviceP) GetPool() *pgxpool.Pool {
-	return s.pool
-}
+
+var PostgreSQLSet = wire.NewSet(
+	NewPostgresConnction,
+	wire.Bind(new(ServicePostgresInterface),new(*ServicePostgresStruct)),
+)
+
+var _ ServicePostgresInterface =(*ServicePostgresStruct)(nil)
 
 // Health checks the health of the database connection
-func (s *serviceP) Health() map[string]string {
+func (s *ServicePostgresStruct) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
 	// Ping the database
-	err := s.pool.Ping(ctx)
+	err := s.Pool.Ping(ctx)
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
@@ -121,7 +95,7 @@ func (s *serviceP) Health() map[string]string {
 	stats["message"] = "It's healthy"
 
 	// Get pool statistics
-	poolStats := s.pool.Stat()
+	poolStats := s.Pool.Stat()
 	stats["total_connections"] = strconv.Itoa(int(poolStats.TotalConns()))
 	stats["idle_connections"] = strconv.Itoa(int(poolStats.IdleConns()))
 	stats["acquired_connections"] = strconv.Itoa(int(poolStats.AcquiredConns()))
@@ -142,8 +116,8 @@ func (s *serviceP) Health() map[string]string {
 }
 
 // Close closes the database connection pool
-func (s *serviceP) Close() error {
-	log.Printf("Disconnecting from database: %s", database)
-	s.pool.Close()
+func (s *ServicePostgresStruct) Close() error {
+	log.Printf("Disconnecting from database")
+	s.Pool.Close()
 	return nil
 }

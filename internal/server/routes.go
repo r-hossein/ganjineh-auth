@@ -1,12 +1,12 @@
 package server
 
 import (
-	"github.com/gofiber/fiber/v2"
+	// "github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"ganjineh-auth/internal/server/routes"
+	"ganjineh-auth/internal/routes"
 )
 
-func (s *FiberServer) RegisterFiberRoutes() {
+func (s *FiberServer) RegisterFiberRoutes(routeContainer *routes.RouteContainer) {
 	// Apply CORS middleware
 	s.App.Use(cors.New(cors.Config{
 		AllowOrigins:     "*",
@@ -17,16 +17,5 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	}))
 
 	api := s.App.Group("/api")
-	routes.SetupV1Routes(api)  
-}
-
-func (s *FiberServer) HelloWorldHandler(c *fiber.Ctx) error {
-	resp := fiber.Map{
-		"message": "Hello World",
-	}
-	return c.JSON(resp)
-}
-
-func (s *FiberServer) healthHandler(c *fiber.Ctx) error {
-	return c.JSON(s.pdb.Health())
+	routeContainer.SetupV1Routes(api)  
 }

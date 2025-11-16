@@ -6,30 +6,39 @@ import (
 	"encoding/base64"
 	"time"
 
+	"ganjineh-auth/internal/config"
 	"ganjineh-auth/internal/models/entities"
 	req "ganjineh-auth/internal/models/requests"
 	"ganjineh-auth/pkg/ierror"
 
+	"github.com/google/wire"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
 
-type OTPInterface interface {
+type OTPPkgInterface interface {
 	GenerateOTP(phoneNumber string) (*models.OTP)
 	VerifyOTP(data *models.OTP, reqData *req.OTPVerifyRequest) (bool, *ierror.AppError)
 }
 
-type OTP struct{
-    secretKey string
+type OTPPkgStruct struct{
+    Conf	*config.StructConfig
 }
 
-func NewOTPService(jwtSecret string) OTPInterface {
-    return &OTP{
-        secretKey: jwtSecret,
+func NewOTPPkgService(cfg *config.StructConfig) *OTPPkgStruct {
+    return &OTPPkgStruct{
+        Conf: cfg,
     }
 }
 
-func (s *OTP) GenerateOTP(phoneNumber string) *models.OTP {
+var OTPPkgSet = wire.NewSet(
+	NewOTPPkgService,
+	wire.Bind(new(OTPPkgInterface), new(*OTPPkgStruct)),
+)
+
+var _ OTPPkgInterface = (*OTPPkgStruct)(nil)
+
+func (s *OTPPkgStruct) GenerateOTP(phoneNumber string) *models.OTP {
 	
     // code,err := totp.GenerateCodeCustom(phoneNumber,time.Now(),totp.ValidateOpts{
     //     Period: 120,
@@ -57,7 +66,7 @@ func (s *OTP) GenerateOTP(phoneNumber string) *models.OTP {
 	return result
 }
 
-func (s *OTP) VerifyOTP(data *models.OTP, reqData *req.OTPVerifyRequest) (bool, *ierror.AppError) {
+func (s *OTPPkgStruct) VerifyOTP(data *models.OTP, reqData *req.OTPVerifyRequest) (bool, *ierror.AppError) {
 
     if time.Now().After(data.ExpiresAt) {
 		return false,ierror.ErrOTPExpired
@@ -84,12 +93,12 @@ func (s *OTP) VerifyOTP(data *models.OTP, reqData *req.OTPVerifyRequest) (bool, 
 }
 
 // generateSignature تولید امضا با HMAC-SHA256
-func (s *OTP) generateSignature(phoneNumber, code string) string {
+func (s *OTPPkgStruct) generateSignature(phoneNumber, code string) string {
 	// ایجاد داده برای امضا
 	data := phoneNumber + "|" + code
 	
 	// ایجاد HMAC-SHA256
-	h := hmac.New(sha256.New, []byte(s.secretKey))
+	h := hmac.New(sha256.New, []byte(s.Conf.SECRET_KEY))
 	h.Write([]byte(data))
 	
 	// کدگذاری base64
@@ -97,7 +106,7 @@ func (s *OTP) generateSignature(phoneNumber, code string) string {
 }
 
 // verifySignature بررسی صحت امضا
-func (s *OTP) verifySignature(reqData *req.OTPVerifyRequest) bool {
+func (s *OTPPkgStruct) verifySignature(reqData *req.OTPVerifyRequest) bool {
 	expectedSignature := s.generateSignature(reqData.PhoneNumber, reqData.Code)
 	return hmac.Equal([]byte(expectedSignature), []byte(reqData.Signature))
 }

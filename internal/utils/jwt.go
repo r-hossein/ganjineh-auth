@@ -9,9 +9,10 @@ import (
 	"ganjineh-auth/pkg/ierror"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/wire"
 )
 
-type JWTService interface {
+type JwtPkgInterface interface {
     GenerateAccessToken(data *TokenOptions) (string, int64, *ierror.AppError)
     GenerateRefreshToken(data *TokenOptions) (string, int64, *ierror.AppError)
     GenerateTempToken(data *TokenOptions) (string, int64, *ierror.AppError)
@@ -29,43 +30,50 @@ type TokenOptions struct {
     Orgs        []ent.CompanyRole
 }
 
-type jwtService struct {
-    config *config.JWTConfig
+type JwtPkgStruct struct {
+    Conf *config.StructConfig
 }
 
-func NewJWTService(cfg *config.JWTConfig) JWTService {
-    return &jwtService{
-        config: cfg,
+func NewJWTPkgService(cfg *config.StructConfig) *JwtPkgStruct {
+    return &JwtPkgStruct{
+        Conf: cfg,
     }
 }
 
-func (s *jwtService) getSecret(tokenType ent.TokenType) string {
+var JwtPkgSet = wire.NewSet(
+    NewJWTPkgService,
+    wire.Bind(new(JwtPkgInterface), new(*JwtPkgStruct)),
+)
+
+var _ JwtPkgInterface = (*JwtPkgStruct)(nil)
+
+func (s *JwtPkgStruct) getSecret(tokenType ent.TokenType) string {
     switch tokenType {
     case ent.TokenTypeAccess:
-        return s.config.AccessSecret
+        return s.Conf.AccessSecret
     case ent.TokenTypeRefresh:
-        return s.config.RefreshSecret
+        return s.Conf.RefreshSecret
     case ent.TokenTypeTemp:
-        return s.config.TempSecret
+        return s.Conf.TempSecret
     default:
-        return s.config.AccessSecret
+        return s.Conf.AccessSecret
     }
 }
 
-func (s *jwtService) getExpiration(tokenType ent.TokenType) time.Duration {
+func (s *JwtPkgStruct) getExpiration(tokenType ent.TokenType) time.Duration {
     switch tokenType {
     case ent.TokenTypeAccess:
-        return s.config.AccessExpiration
+        return s.Conf.AccessExpiration
     case ent.TokenTypeRefresh:
-        return s.config.RefreshExpiration
+        return s.Conf.RefreshExpiration
     case ent.TokenTypeTemp:
-        return s.config.TempExpiration
+        return s.Conf.TempExpiration
     default:
-        return s.config.AccessExpiration
+        return s.Conf.AccessExpiration
     }
 }
 
-func (s *jwtService) generateToken(data *TokenOptions, tokenType ent.TokenType) (string, int64, *ierror.AppError) {
+func (s *JwtPkgStruct) generateToken(data *TokenOptions, tokenType ent.TokenType) (string, int64, *ierror.AppError) {
     expiration := s.getExpiration(tokenType)
     expiresAt := time.Now().Add(expiration)
     var claims jwt.Claims
@@ -120,19 +128,19 @@ func (s *jwtService) generateToken(data *TokenOptions, tokenType ent.TokenType) 
     return tokenString, expiresAt.Unix(), nil
 }
 
-func (s *jwtService) GenerateAccessToken(data *TokenOptions) (string, int64, *ierror.AppError) {
+func (s *JwtPkgStruct) GenerateAccessToken(data *TokenOptions) (string, int64, *ierror.AppError) {
     return s.generateToken(data, ent.TokenTypeAccess)
 }
 
-func (s *jwtService) GenerateRefreshToken(data *TokenOptions) (string, int64, *ierror.AppError) {
+func (s *JwtPkgStruct) GenerateRefreshToken(data *TokenOptions) (string, int64, *ierror.AppError) {
     return s.generateToken(data, ent.TokenTypeRefresh)
 }
 
-func (s *jwtService) GenerateTempToken(data *TokenOptions) (string, int64, *ierror.AppError) {
+func (s *JwtPkgStruct) GenerateTempToken(data *TokenOptions) (string, int64, *ierror.AppError) {
     return s.generateToken(data, ent.TokenTypeTemp)
 }
 
-func (s *jwtService) GenerateTokenPair(data *TokenOptions) (*ent.TokenPair, *ierror.AppError) {
+func (s *JwtPkgStruct) GenerateTokenPair(data *TokenOptions) (*ent.TokenPair, *ierror.AppError) {
     accessToken, _, err := s.GenerateAccessToken(data)
     if err != nil {
         return nil, err
@@ -150,7 +158,7 @@ func (s *jwtService) GenerateTokenPair(data *TokenOptions) (*ent.TokenPair, *ier
     }, nil
 }
 
-func (s *jwtService) ValidateAccessToken(tokenString string) (*ent.AccessTokenClaims, *ierror.AppError) {
+func (s *JwtPkgStruct) ValidateAccessToken(tokenString string) (*ent.AccessTokenClaims, *ierror.AppError) {
     secret := s.getSecret(ent.TokenTypeAccess)
 
     token, err := jwt.ParseWithClaims(tokenString, &ent.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -169,7 +177,7 @@ func (s *jwtService) ValidateAccessToken(tokenString string) (*ent.AccessTokenCl
     return nil, ierror.NewAppError(1101,"invalid access token")
 }
 
-func (s *jwtService) ValidateRefreshToken(tokenString string) (*ent.RefreshTokenClaims, *ierror.AppError) {
+func (s *JwtPkgStruct) ValidateRefreshToken(tokenString string) (*ent.RefreshTokenClaims, *ierror.AppError) {
     secret := s.getSecret(ent.TokenTypeRefresh)
 
     token, err := jwt.ParseWithClaims(tokenString, &ent.RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -188,7 +196,7 @@ func (s *jwtService) ValidateRefreshToken(tokenString string) (*ent.RefreshToken
     return nil, ierror.NewAppError(1101,"invalid access token")
 }
 
-func (s *jwtService) ValidateTempToken(tokenString string) (*ent.TempTokenClamis, *ierror.AppError) {
+func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClamis, *ierror.AppError) {
     secret := s.getSecret(ent.TokenTypeAccess)
 
     token, err := jwt.ParseWithClaims(tokenString, &ent.TempTokenClamis{}, func(token *jwt.Token) (interface{}, error) {

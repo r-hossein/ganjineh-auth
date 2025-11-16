@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"ganjineh-auth/internal/server"
+	"ganjineh-auth/internal/di"
 	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -41,9 +43,11 @@ func gracefulShutdown(fiberServer *server.FiberServer, done chan bool) {
 
 func main() {
 
-	server := server.New()
-
-	server.RegisterFiberRoutes()
+	server, err := di.InitializeUserHandler()
+    if err != nil {
+        log.Fatal("Failed to initialize server: ", err)
+    }
+	// server.RegisterFiberRoutes()
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)

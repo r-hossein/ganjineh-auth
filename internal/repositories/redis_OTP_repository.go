@@ -4,36 +4,43 @@ import (
 	"context"
 	"encoding/json"
 	"ganjineh-auth/internal/database"
-	ent	"ganjineh-auth/internal/models/entities"
+	ent "ganjineh-auth/internal/models/entities"
 	"ganjineh-auth/pkg/ierror"
 	"time"
 
+	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisRepository interface {
+type RedisOTPRepositoryInterface interface {
 	StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError
 	GetOTP(ctx context.Context, phoneNumber string) (*ent.OTP, *ierror.AppError)
 	DeleteOTP(ctx context.Context, phoneNumber string) *ierror.AppError
 }
 
-type redisRepository struct {
+type RedisOTPRepositoryStruct struct {
 	client *redis.Client
 	prefix string
 }
 
-func NewRedisRepository(rdb database.ServiceR, prefix string) RedisRepository {
-	return &redisRepository{
+func NewRedisRepository(rdb *database.ServiceRedisStruct) RedisOTPRepositoryInterface {
+	return &RedisOTPRepositoryStruct{
 		client: rdb.Client(),
-		prefix: prefix,
+		prefix: "otp:",
 	}
 }
 
-func (r *redisRepository) getKey(phoneNumber string) string {
+var RedisRepositorySet = wire.NewSet(
+    NewRedisRepository,
+    // wire.Bind(new(RedisOTPRepositoryInterface), new(*RedisOTPRepositoryStruct)),
+)
+var _ RedisOTPRepositoryInterface =(*RedisOTPRepositoryStruct)(nil)
+
+func (r *RedisOTPRepositoryStruct) getKey(phoneNumber string) string {
 	return r.prefix + phoneNumber
 }
 
-func (r *redisRepository) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
+func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -49,7 +56,7 @@ func (r *redisRepository) StoreOTP(ctx context.Context, data *ent.OTP, expiratio
 	return nil
 }
 
-func (r *redisRepository) GetOTP(ctx context.Context, phoneNumber string) (*ent.OTP, *ierror.AppError) {
+func (r *RedisOTPRepositoryStruct) GetOTP(ctx context.Context, phoneNumber string) (*ent.OTP, *ierror.AppError) {
 	key := r.getKey(phoneNumber)
 	data, err := r.client.Get(ctx, key).Result()
 	if err != nil {
@@ -68,7 +75,7 @@ func (r *redisRepository) GetOTP(ctx context.Context, phoneNumber string) (*ent.
 	return &otpData, nil
 }
 
-func (r *redisRepository) DeleteOTP(ctx context.Context, phoneNumber string) *ierror.AppError {
+func (r *RedisOTPRepositoryStruct) DeleteOTP(ctx context.Context, phoneNumber string) *ierror.AppError {
 	key := r.getKey(phoneNumber)
 	err := r.client.Del(ctx, key).Err()
 	if err != nil {

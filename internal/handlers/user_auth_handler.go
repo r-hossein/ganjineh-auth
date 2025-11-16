@@ -1,12 +1,14 @@
-package v1
+package handlers
 
 import (
-	"ganjineh-auth/internal/services/auth"
 	"ganjineh-auth/internal/models/requests"
-	"github.com/gofiber/fiber/v2"
-	"github.com/go-playground/validator/v10"
+	"ganjineh-auth/internal/services"
 	"ganjineh-auth/pkg/ierror"
-    "ganjineh-auth/pkg/response"
+	"ganjineh-auth/pkg/response"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/wire"
 )
 
 type AuthHandlerInterface interface {
@@ -14,12 +16,24 @@ type AuthHandlerInterface interface {
 	VerifyOTPHandler(c *fiber.Ctx) error
 }
 
-type AuthHandler struct {
-	AuthService auth.AuthService
-	validate *validator.Validate
+type AuthHandlerStruct struct {
+	AuthService services.AuthServiceInterface
+	Validate *validator.Validate
 }
 
-func (h *AuthHandler) RequestOTPHandler (c *fiber.Ctx) error {
+func NewAuthHandler(authServ services.AuthServiceInterface, valid *validator.Validate) *AuthHandlerStruct{
+	return &AuthHandlerStruct{
+		AuthService: authServ,
+		Validate: valid,
+	}
+}
+
+var AuthHandlerSet = wire.NewSet(
+	NewAuthHandler,
+	wire.Bind(new(AuthHandlerInterface), new(*AuthHandlerStruct)),
+)
+
+func (h *AuthHandlerStruct) RequestOTPHandler (c *fiber.Ctx) error {
 	var req models.OTPPhoneRequest
 	
 	if err := c.BodyParser(&req); err != nil{
@@ -27,7 +41,7 @@ func (h *AuthHandler) RequestOTPHandler (c *fiber.Ctx) error {
 	}
 
 	// Validate input
-    if err := h.validate.Struct(req); err != nil {
+    if err := h.Validate.Struct(req); err != nil {
         return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
     }
 
@@ -40,7 +54,7 @@ func (h *AuthHandler) RequestOTPHandler (c *fiber.Ctx) error {
 	return c.JSON(responses.SuccessResponse(res,200))
 }
 
-func (h *AuthHandler) VerifyOTPHandler (c *fiber.Ctx) error {
+func (h *AuthHandlerStruct) VerifyOTPHandler (c *fiber.Ctx) error {
 	var req models.OTPVerifyRequest
 	
 	if err := c.BodyParser(&req); err != nil{
@@ -48,7 +62,7 @@ func (h *AuthHandler) VerifyOTPHandler (c *fiber.Ctx) error {
 	}
 
 	// Validate input
-    if err := h.validate.Struct(req); err != nil {
+    if err := h.Validate.Struct(req); err != nil {
         return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
     }
 

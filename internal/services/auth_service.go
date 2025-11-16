@@ -1,4 +1,4 @@
-package auth
+package services
 
 import (
 	"context"
@@ -11,16 +11,16 @@ import (
 	res "ganjineh-auth/internal/models/responses"
 	"ganjineh-auth/internal/repositories"
 	"ganjineh-auth/internal/repositories/db"
-	"ganjineh-auth/internal/services/otp"
 	"ganjineh-auth/internal/utils"
 	"ganjineh-auth/pkg/ierror"
 
 	"github.com/google/uuid"
+	"github.com/google/wire"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type AuthService interface {
+type AuthServiceInterface interface {
     RequestOTP(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse, *ierror.AppError)
     VerifyOTP(ctx context.Context, data *req.OTPVerifyRequest) (*res.OTPVerifyResponse, *ierror.AppError)
     // Register(tempToken string, userData *UserRegistration) (*AuthResult, ierror)
@@ -29,16 +29,36 @@ type AuthService interface {
     // GetUserOrganizations(userID uuid.UUID) ([]Organization, ierror)
 }
 
-type authService struct {
-    otpRepo		repositories.RedisRepository
-	otpService	otp.OTPService
+type AuthServiceStruct struct {
+    otpRepo		repositories.RedisOTPRepositoryInterface
     userRepo    *db.Queries
-    jwtUtil     utils.JWTService
+    jwtUtil     utils.JwtPkgInterface
+    otpServ     OTPServiceInterface
 }
 
-func (s *authService) RequestOTP(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse, *ierror.AppError) {
+func NewAuthService(
+    otpService OTPServiceInterface,
+    userRepo *db.Queries,
+    jwtUtil utils.JwtPkgInterface,
+    otpRepo repositories.RedisOTPRepositoryInterface,
+) AuthServiceInterface {
+    return &AuthServiceStruct{
+        otpServ: otpService,
+        userRepo:   userRepo,
+        jwtUtil:    jwtUtil,
+        otpRepo: otpRepo,
+    }
+}
+
+var AuthServiceSet = wire.NewSet(
+    NewAuthService,
+    // wire.Bind(new(AuthServiceInterface), new(*AuthServiceStruct)),
+)
+var _ AuthServiceInterface = (*AuthServiceStruct)(nil)
+
+func (s *AuthServiceStruct) RequestOTP(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse, *ierror.AppError) {
     
-	result,erorr := s.otpService.OTPRequest(ctx, phoneNumber)
+	result,erorr := s.otpServ.OTPRequest(ctx, phoneNumber)
 
 	if erorr != nil {
 		return nil,erorr
@@ -47,9 +67,9 @@ func (s *authService) RequestOTP(ctx context.Context, phoneNumber string) (*res.
     return result,nil
 }
 
-func (s *authService) VerifyOTP(ctx context.Context, data *req.OTPVerifyRequest) (*res.OTPVerifyResponse, *ierror.AppError) {
+func (s *AuthServiceStruct) VerifyOTP(ctx context.Context, data *req.OTPVerifyRequest) (*res.OTPVerifyResponse, *ierror.AppError) {
     // Validate OTP
-    valid, err := s.otpService.ValidateOTP(ctx,data)
+    valid, err := s.otpServ.ValidateOTP(ctx,data)
     if !valid {
         return nil,err
     }
