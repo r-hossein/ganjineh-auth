@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   app:
@@ -10,14 +9,13 @@ services:
     ports:
       - ${PORT}:${PORT}
     env_file:
-      - ./.env
+      - ../../.env
     depends_on:
-      psql_bp:
-        condition: service_healthy
+      - psql_bp
     networks:
       - ganjineh
   psql_bp:
-    image: postgres:18-alpine:3.22
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${BLUEPRINT_DB_DATABASE}
@@ -39,8 +37,6 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    entrypoint: 
-      
     volumes:
       - redis_data:/data
     restart: unless-stopped
