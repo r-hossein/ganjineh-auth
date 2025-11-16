@@ -30,7 +30,7 @@ type ServicePostgresStruct struct {
 
 func NewPostgresConnction(con *config.StructConfig) *ServicePostgresStruct {
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", 
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable&search_path=%s", 
 		con.BLUEPRINT_DB_USERNAME, con.BLUEPRINT_DB_PASSWORD, con.BLUEPRINT_DB_HOST, con.BLUEPRINT_DB_PORT, con.BLUEPRINT_DB_DATABASE, con.BLUEPRINT_DB_SCHEMA)
 
 	// Create connection pool config

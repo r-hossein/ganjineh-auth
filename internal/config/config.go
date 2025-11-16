@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/wire"
@@ -17,18 +18,18 @@ type StructConfig struct {
     TempExpiration    time.Duration `mapstructure:"TEMP_EXPIRATION"`
 
     BLUEPRINT_DB_HOST   string
-    BLUEPRINT_DB_PORT   string
+    BLUEPRINT_DB_PORT   int
     BLUEPRINT_DB_DATABASE   string
     BLUEPRINT_DB_USERNAME   string
     BLUEPRINT_DB_PASSWORD   string
     BLUEPRINT_DB_SCHEMA string
 
     REDIS_HOST string
-    REDIS_PORT string
+    REDIS_PORT int
     REDIS_USER string
     REDIS_PASS string
 
-    PORT    string
+    PORT    int
     APP_ENV string
 
     SECRET_KEY string
@@ -55,6 +56,9 @@ func LoadConfig() *StructConfig {
         return nil
     }
 
+    port, _ := strconv.Atoi(os.Getenv("PORT"))
+	portp, _ := strconv.Atoi(os.Getenv("BLUEPRINT_DB_PORT"))
+    portr, _ := strconv.Atoi(os.Getenv(""))
     return &StructConfig{
         AccessSecret: os.Getenv("JWT_ACCESS_SECRET"),
         RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
@@ -63,16 +67,16 @@ func LoadConfig() *StructConfig {
         RefreshExpiration: refreshExpiration,
         TempExpiration: tempExpiration,
         BLUEPRINT_DB_HOST: os.Getenv("BLUEPRINT_DB_HOST"),
-        BLUEPRINT_DB_PORT: os.Getenv("BLUEPRINT_DB_PORT"),
+        BLUEPRINT_DB_PORT: portp,
         BLUEPRINT_DB_DATABASE: os.Getenv("BLUEPRINT_DB_DATABASE"),
         BLUEPRINT_DB_USERNAME: os.Getenv("BLUEPRINT_DB_USERNAME"),
         BLUEPRINT_DB_PASSWORD: os.Getenv("BLUEPRINT_DB_PASSWORD"),
         BLUEPRINT_DB_SCHEMA: os.Getenv("BLUEPRINT_DB_SCHEMA"),
-        REDIS_PORT: os.Getenv("REDIS_PORT"),
+        REDIS_PORT: portr,
         REDIS_HOST: os.Getenv("REDIS_HOST"),
         REDIS_USER: os.Getenv("REDIS_USER"),
         REDIS_PASS: os.Getenv("REDIS_PASS"),
-        PORT: os.Getenv("PORT"),
+        PORT: port,
         APP_ENV: os.Getenv("APP_ENV"),
         SECRET_KEY: os.Getenv("SECRET_KEY"),
     }

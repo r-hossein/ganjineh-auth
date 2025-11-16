@@ -2,8 +2,8 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: ../../Dockerfile
+      context: ../../
+      dockerfile: Dockerfile
       target: prod
     restart: unless-stopped
     ports:
@@ -40,6 +40,8 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    networks:
+      - ganjineh
 
 volumes:
   psql_volume_bp:
