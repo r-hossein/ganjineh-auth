@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ../../Dockerfile
       target: prod
     restart: unless-stopped
     ports:
