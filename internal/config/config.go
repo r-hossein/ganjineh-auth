@@ -18,6 +18,7 @@ type StructConfig struct {
     TempExpiration    time.Duration `mapstructure:"TEMP_EXPIRATION"`
 
     BLUEPRINT_DB_HOST   string
+    BLUEPRINT_DB_CPORT   int
     BLUEPRINT_DB_PORT   int
     BLUEPRINT_DB_DATABASE   string
     BLUEPRINT_DB_USERNAME   string
@@ -58,7 +59,8 @@ func LoadConfig() *StructConfig {
 
     port, _ := strconv.Atoi(os.Getenv("PORT"))
 	portp, _ := strconv.Atoi(os.Getenv("BLUEPRINT_DB_PORT"))
-    portr, _ := strconv.Atoi(os.Getenv(""))
+    portcp, _ := strconv.Atoi(os.Getenv("BLUEPRINT_DB_CPORT"))
+    portr, _ := strconv.Atoi(os.Getenv("REDIS_PORT"))
     return &StructConfig{
         AccessSecret: os.Getenv("JWT_ACCESS_SECRET"),
         RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
@@ -68,6 +70,7 @@ func LoadConfig() *StructConfig {
         TempExpiration: tempExpiration,
         BLUEPRINT_DB_HOST: os.Getenv("BLUEPRINT_DB_HOST"),
         BLUEPRINT_DB_PORT: portp,
+        BLUEPRINT_DB_CPORT: portcp,
         BLUEPRINT_DB_DATABASE: os.Getenv("BLUEPRINT_DB_DATABASE"),
         BLUEPRINT_DB_USERNAME: os.Getenv("BLUEPRINT_DB_USERNAME"),
         BLUEPRINT_DB_PASSWORD: os.Getenv("BLUEPRINT_DB_PASSWORD"),
