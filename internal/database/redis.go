@@ -29,8 +29,8 @@ func NewRedisConnection(conf *config.StructConfig) *ServiceRedisStruct {
 	host := conf.REDIS_HOST + ":" + strconv.Itoa(conf.REDIS_PORT)
 	rdb := redis.NewClient(&redis.Options{
 		Addr: host,
-		Username: conf.REDIS_USER,
-		Password: conf.REDIS_PASS,
+		// Username: conf.REDIS_USER,
+		// Password: conf.REDIS_PASS,
 		DB: 0,
 	})
 

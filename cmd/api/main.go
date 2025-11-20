@@ -47,7 +47,6 @@ func main() {
     if err != nil {
         log.Fatal("Failed to initialize server: ", err)
     }
-	// server.RegisterFiberRoutes()
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)

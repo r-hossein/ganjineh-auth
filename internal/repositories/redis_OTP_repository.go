@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"ganjineh-auth/internal/database"
 	ent "ganjineh-auth/internal/models/entities"
 	"ganjineh-auth/pkg/ierror"
@@ -40,20 +41,54 @@ func (r *RedisOTPRepositoryStruct) getKey(phoneNumber string) string {
 	return r.prefix + phoneNumber
 }
 
+// func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
+
+// 	jsonData, err := json.Marshal(data)
+// 	if err != nil {
+// 		fmt.Printf("error in store data: %v",err.Error())
+// 		return ierror.NewAppError(1101,"can`t convert data to json!")
+// 	}
+
+// 	key := r.getKey(data.PhoneNumber)
+// 	err = r.client.Set(ctx, key, jsonData, expiration).Err()
+// 	if err != nil {
+// 		return ierror.NewAppError(1301,"can`t store data in redis!")
+// 	}
+
+// 	return nil
+// }
+
 func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
+    // Log input parameters
+    fmt.Printf("StoreOTP called with - Phone: %s, Expiration: %v\n", data.PhoneNumber, expiration)
+    
+    jsonData, err := json.Marshal(data)
+    if err != nil {
+        fmt.Printf("JSON Marshal error: %v\n", err.Error())
+        return ierror.NewAppError(1101, "can't convert data to json!")
+    }
+    
+    fmt.Printf("JSON data: %s\n", string(jsonData))
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return ierror.NewAppError(1101,"can`t convert data to json!")
-	}
+    key := r.getKey(data.PhoneNumber)
+    fmt.Printf("Redis key: %s\n", key)
 
-	key := r.getKey(data.PhoneNumber)
-	err = r.client.Set(ctx, key, jsonData, expiration).Err()
-	if err != nil {
-		return ierror.NewAppError(1301,"can`t store data in redis!")
-	}
+    err = r.client.Set(ctx, key, jsonData, expiration).Err()
+    if err != nil {
+        fmt.Printf("Redis SET error: %v\n", err.Error())
+        return ierror.NewAppError(1301, "can't store data in redis!")
+    }
 
-	return nil
+    // Verify the data was stored
+    val, err := r.client.Get(ctx, key).Result()
+    if err != nil {
+        fmt.Printf("Redis GET verification error: %v\n", err.Error())
+    } else {
+        fmt.Printf("Data verified in Redis: %s\n", val)
+    }
+
+    fmt.Printf("StoreOTP completed successfully\n")
+    return nil
 }
 
 func (r *RedisOTPRepositoryStruct) GetOTP(ctx context.Context, phoneNumber string) (*ent.OTP, *ierror.AppError) {

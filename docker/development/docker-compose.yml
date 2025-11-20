@@ -7,12 +7,27 @@ services:
       target: prod
     restart: unless-stopped
     ports:
-      - 8081:8081
+      - 8180:8180
     env_file:
       - ../../.env
     depends_on:
       - psql_bp
+      - migrate
       - redis
+    networks:
+      - ganjineh
+  migrate:
+    image: migrate/migrate:latest
+    restart: "no"
+    depends_on:
+      - psql_bp
+    volumes:
+      - ../../internal/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://${BLUEPRINT_DB_USERNAME}:${BLUEPRINT_DB_PASSWORD}@psql_bp:${BLUEPRINT_DB_CPORT}/${BLUEPRINT_DB_DATABASE}?sslmode=disable",
+      "up"
+    ]
     networks:
       - ganjineh
   psql_bp:

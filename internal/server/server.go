@@ -15,6 +15,7 @@ type FiberServer struct{
     pdb         database.ServicePostgresInterface
     rdb         database.ServiceRedisInterface  
     repos       *repositories.Container
+    routeContainer *routes.RouteContainer
 }
 
 func New( // ✅ Change to New to match wire.go
@@ -29,6 +30,7 @@ func New( // ✅ Change to New to match wire.go
         pdb: pdb,
         rdb: rdb,
         repos: repos,
+        routeContainer: routeContainer,
     }
     server.RegisterFiberRoutes(routeContainer)
     return server

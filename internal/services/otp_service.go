@@ -7,6 +7,7 @@ import (
 	"ganjineh-auth/internal/repositories"
 	"ganjineh-auth/internal/utils"
 	"ganjineh-auth/pkg/ierror"
+	"time"
 
 	"github.com/google/wire"
 )
@@ -45,7 +46,7 @@ var _ OTPServiceInterface = (*OTPServiceStruct)(nil)
 func (o *OTPServiceStruct) OTPRequest(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse,*ierror.AppError){
 	
 	result := o.otpUtil.GenerateOTP(phoneNumber)
-	err := o.otpRepo.StoreOTP(ctx,result,5*60*1000)
+	err := o.otpRepo.StoreOTP(ctx,result,150*time.Second)
 	
 	if err != nil {
 		return nil, err
@@ -65,6 +66,13 @@ func (o *OTPServiceStruct) ValidateOTP(ctx context.Context, data *req.OTPVerifyR
 	if err!= nil {
 		return false,err
 	}
+	
+	go func() {
+		err = o.otpRepo.DeleteOTP(ctx,data.PhoneNumber)	
+		if err!= nil {
+			return 
+		}
+	}()
 
 	VerifyResult, err := o.otpUtil.VerifyOTP(result,data)
 
@@ -73,9 +81,4 @@ func (o *OTPServiceStruct) ValidateOTP(ctx context.Context, data *req.OTPVerifyR
 	}
 
 	return VerifyResult,nil
-}
-
-
-func test() {
-	panic("sajkdsf")
 }

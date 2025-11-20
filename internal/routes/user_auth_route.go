@@ -28,8 +28,7 @@ var AuthRoutesSet = wire.NewSet(
     wire.Bind(new(RouteRegistrar), new(*AuthRoutesStruct)), // Bind to interface
 )
 func (h *AuthRoutesStruct) RegisterRoutes(router fiber.Router) {
-	V1 := router.Group("/v1")
-	auth := V1.Group("/auth")
+	auth := router.Group("/auth")
 	
 	otp := auth.Group("/otp")
 	otp.Post("/request",h.handler.RequestOTPHandler)

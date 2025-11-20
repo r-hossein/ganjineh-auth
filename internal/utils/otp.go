@@ -3,7 +3,8 @@ package utils
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/base64"
+	// "encoding/base64"
+	"encoding/hex"
 	"time"
 
 	"ganjineh-auth/internal/config"
@@ -94,7 +95,7 @@ func (s *OTPPkgStruct) VerifyOTP(data *models.OTP, reqData *req.OTPVerifyRequest
 
 // generateSignature تولید امضا با HMAC-SHA256
 func (s *OTPPkgStruct) generateSignature(phoneNumber, code string) string {
-	// ایجاد داده برای امضا
+	// // ایجاد داده برای امضا
 	data := phoneNumber + "|" + code
 	
 	// ایجاد HMAC-SHA256
@@ -102,7 +103,18 @@ func (s *OTPPkgStruct) generateSignature(phoneNumber, code string) string {
 	h.Write([]byte(data))
 	
 	// کدگذاری base64
-	return base64.URLEncoding.EncodeToString(h.Sum(nil))
+	
+	// return base64.URLEncoding.EncodeToString(h.Sum(nil))
+	hexSignature := hex.EncodeToString(h.Sum(nil))
+    return hexSignature[:16]
+	//     data := phoneNumber + "|" + code
+    
+    // h := hmac.New(sha256.New, []byte(s.Conf.SECRET_KEY))
+    // h.Write([]byte(data))
+    
+    // // Take first 16 bytes of the HMAC, then encode
+    // hmacResult := h.Sum(nil)
+    // return hex.EncodeToString(hmacResult[:16])
 }
 
 // verifySignature بررسی صحت امضا
