@@ -4,6 +4,7 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/wire"
+    
 )
 
 type RouteContainer struct {
@@ -26,10 +27,12 @@ func (c *RouteContainer) SetupV1Routes(api fiber.Router) {
 
 func ProvideRouteRegistrars(
     authRoutes *AuthRoutesStruct,
+    graphRoutes *GraphQLRoutesStruct,
     // Add other route structs as needed
 ) []RouteRegistrar {
     return []RouteRegistrar{
         authRoutes,
+        graphRoutes,
         // Add other route registrars here
     }
 }
@@ -39,6 +42,7 @@ var RouteContainerSet = wire.NewSet(
     ProvideRouteRegistrars,
     // Include all route sets
     AuthRoutesSet,
+    GraphQLRoutesSet,
     // UserRoutesSet, // Add more as needed
     // AdminRoutesSet,
 )

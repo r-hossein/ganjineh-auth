@@ -25,7 +25,6 @@ var _ RouteRegistrar = (*AuthRoutesStruct)(nil)
 
 var AuthRoutesSet = wire.NewSet(
     NewAuthRoutes,
-    wire.Bind(new(RouteRegistrar), new(*AuthRoutesStruct)), // Bind to interface
 )
 func (h *AuthRoutesStruct) RegisterRoutes(router fiber.Router) {
 	auth := router.Group("/auth")

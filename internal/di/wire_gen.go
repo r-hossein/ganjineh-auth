@@ -35,7 +35,9 @@ func InitializeUserHandler() (*server.FiberServer, error) {
 	validate := utils.NewValidator()
 	authHandlerStruct := handlers.NewAuthHandler(authServiceInterface, validate)
 	authRoutesStruct := routes.NewAuthRoutes(authHandlerStruct)
-	v := routes.ProvideRouteRegistrars(authRoutesStruct)
+	handlerServer := server.ProvideGraphQLHandler()
+	graphQLRoutesStruct := routes.NewGraphQLRoutes(handlerServer)
+	v := routes.ProvideRouteRegistrars(authRoutesStruct, graphQLRoutesStruct)
 	routeContainer := routes.NewRouteContainer(v...)
 	fiberServer := server.New(app, servicePostgresStruct, serviceRedisStruct, container, routeContainer)
 	return fiberServer, nil

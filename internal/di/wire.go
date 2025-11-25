@@ -36,6 +36,7 @@ func InitializeUserHandler() (*server.FiberServer, error) {
 
         handlers.AuthHandlerSet,
         
+        server.ProvideGraphQLHandler,
         
         routes.RouteContainerSet,
 
