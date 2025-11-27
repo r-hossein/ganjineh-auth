@@ -41,27 +41,8 @@ func (r *RedisOTPRepositoryStruct) getKey(phoneNumber string) string {
 	return r.prefix + phoneNumber
 }
 
-// func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
-
-// 	jsonData, err := json.Marshal(data)
-// 	if err != nil {
-// 		fmt.Printf("error in store data: %v",err.Error())
-// 		return ierror.NewAppError(1101,"can`t convert data to json!")
-// 	}
-
-// 	key := r.getKey(data.PhoneNumber)
-// 	err = r.client.Set(ctx, key, jsonData, expiration).Err()
-// 	if err != nil {
-// 		return ierror.NewAppError(1301,"can`t store data in redis!")
-// 	}
-
-// 	return nil
-// }
-
 func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, expiration time.Duration) *ierror.AppError {
-    // Log input parameters
-    fmt.Printf("StoreOTP called with - Phone: %s, Expiration: %v\n", data.PhoneNumber, expiration)
-    
+
     jsonData, err := json.Marshal(data)
     if err != nil {
         fmt.Printf("JSON Marshal error: %v\n", err.Error())
