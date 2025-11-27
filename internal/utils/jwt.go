@@ -122,7 +122,7 @@ func (s *JwtPkgStruct) generateToken(data *TokenOptions, tokenType ent.TokenType
     
     tokenString, err := token.SignedString([]byte(secret))
     if err != nil {
-        return "", 0, ierror.NewAppError(1010,err.Error())
+        return "", 0, ierror.NewAppError(500,1010,err.Error())
     }
     
     return tokenString, expiresAt.Unix(), nil
@@ -168,13 +168,19 @@ func (s *JwtPkgStruct) ValidateAccessToken(tokenString string) (*ent.AccessToken
         return []byte(secret), nil
     })
     if err != nil {
-        return nil, ierror.NewAppError(1011,err.Error())
+        return nil, ierror.NewAppError(500,1011,err.Error())
     }
 
-    if claims, ok := token.Claims.(*ent.AccessTokenClaims); ok && token.Valid {
-        return claims, nil
-    }
-    return nil, ierror.NewAppError(1101,"invalid access token")
+    claims, ok := token.Claims.(*ent.AccessTokenClaims)
+	if !ok || !token.Valid {
+		return nil, ierror.NewAppError(403,1101, "invalid access token")
+	}
+
+    if claims.ExpiresAt == nil || time.Now().After(claims.ExpiresAt.Time) {
+		return nil, ierror.NewAppError(403,1102, "token expired")
+	}
+
+    return claims, nil
 }
 
 func (s *JwtPkgStruct) ValidateRefreshToken(tokenString string) (*ent.RefreshTokenClaims, *ierror.AppError) {
@@ -187,13 +193,13 @@ func (s *JwtPkgStruct) ValidateRefreshToken(tokenString string) (*ent.RefreshTok
         return []byte(secret), nil
     })
     if err != nil {
-        return nil, ierror.NewAppError(1011,err.Error())
+        return nil, ierror.NewAppError(500,1011,err.Error())
     }
 
     if claims, ok := token.Claims.(*ent.RefreshTokenClaims); ok && token.Valid {
         return claims, nil
     }
-    return nil, ierror.NewAppError(1101,"invalid access token")
+    return nil, ierror.NewAppError(500,1101,"invalid access token")
 }
 
 func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClamis, *ierror.AppError) {
@@ -206,12 +212,12 @@ func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClam
         return []byte(secret), nil
     })
     if err != nil {
-        return nil, ierror.NewAppError(1011,err.Error())
+        return nil, ierror.NewAppError(500,1011,err.Error())
     }
 
     if claims, ok := token.Claims.(*ent.TempTokenClamis); ok && token.Valid {
         return claims, nil
     }
-    return nil, ierror.NewAppError(1101,"invalid access token")
+    return nil, ierror.NewAppError(403,1101,"invalid access token")
 }
 

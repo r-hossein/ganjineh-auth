@@ -5,7 +5,6 @@ import (
 )
 
 type BaseResponse struct {
-    Success bool        `json:"success"`
     Code    int         `json:"code"`
     Message string      `json:"message,omitempty"`
     Data    interface{} `json:"data,omitempty"`
@@ -14,11 +13,11 @@ type BaseResponse struct {
 
 type ErrorInfo struct {
     Message string `json:"message"`
+    Reason  string `json:"reason,omitempty"`
 }
 
 func SuccessResponse(data interface{}, code int) BaseResponse {
     return BaseResponse{
-        Success: true,
         Code: code,
         Data:    data,
     }
@@ -26,19 +25,40 @@ func SuccessResponse(data interface{}, code int) BaseResponse {
 
 func SuccessWithMessage(message string, data interface{}, code int) BaseResponse {
     return BaseResponse{
-        Success: true,
         Code: code,
         Message: message,
         Data:    data,
     }
 }
 
-func ErrorResponse(errors *ierror.AppError) BaseResponse {
+func ErrorResponse(err error) BaseResponse {
+
+    // Handle AuthError
+    if authErr, ok := err.(*ierror.AuthError); ok {
+        return BaseResponse{
+            Code: authErr.Code,
+            Error: &ErrorInfo{
+                Message: authErr.Message,
+                Reason:  authErr.Reason,
+            },
+        }
+    }
+
+    // Handle AppError (your existing errors)
+    if appErr, ok := err.(*ierror.AppError); ok {
+        return BaseResponse{
+            Code: appErr.Code,
+            Error: &ErrorInfo{
+                Message: appErr.Message,
+            },
+        }
+    }
+
+    // Unknown error → internal error
     return BaseResponse{
-        Success: false,
-        Code: errors.Code,
+        Code: 500,
         Error: &ErrorInfo{
-            Message: errors.Message,
+            Message: "internal server error",
         },
     }
 }

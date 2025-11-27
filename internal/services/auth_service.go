@@ -94,11 +94,11 @@ func (s *AuthServiceStruct) VerifyOTP(ctx context.Context, data *req.OTPVerifyRe
     }
     
     if user.Status == db.UserStatusSuspended {
-        return nil,ierror.NewAppError(1103,"you have baned")
+        return nil,ierror.NewAppError(403,1103,"you have baned")
     }
 
     if user.Status == db.UserStatusInactive{
-        return nil,ierror.NewAppError(1104,"you delete your account")
+        return nil,ierror.NewAppError(403,1104,"you delete your account")
     }
 
     // User exists - generate tokens
@@ -107,7 +107,7 @@ func (s *AuthServiceStruct) VerifyOTP(ctx context.Context, data *req.OTPVerifyRe
     if len(user.CompanyRoles) > 0 && string(user.CompanyRoles) != "[]" {
         errr := json.Unmarshal(user.CompanyRoles, &result)
         if errr != nil {
-            return nil, ierror.NewAppError(1020,errr.Error())
+            return nil, ierror.NewAppError(500,1020,errr.Error())
         }
     }
 

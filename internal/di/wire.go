@@ -12,20 +12,22 @@ import (
 	"ganjineh-auth/internal/server"
 	"ganjineh-auth/internal/services"
 	"ganjineh-auth/internal/utils"
-
-	"github.com/gofiber/fiber/v2"
+	"ganjineh-auth/internal/middleware"
+	"ganjineh-auth/pkg"
 	"github.com/google/wire"
 )
 
 func InitializeUserHandler() (*server.FiberServer, error) {
     wire.Build(
-        provideFiberApp,
+        pkg.NewErrorHandler,
 
 		config.LoadConfig,
         utils.JwtPkgSet,
         utils.OTPPkgSet,
         utils.ValidatorSet,
 
+        middleware.MiddlewareJwtSet,
+        
         database.PostgreSQLSet,
         database.RedisSet,
         
@@ -43,11 +45,4 @@ func InitializeUserHandler() (*server.FiberServer, error) {
         server.New,
     )
     return &server.FiberServer{}, nil
-}
-
-func provideFiberApp() *fiber.App {
-    return fiber.New(fiber.Config{
-        ServerHeader: "ganjineh-auth",
-        AppName:      "ganjineh-auth",
-    })
 }

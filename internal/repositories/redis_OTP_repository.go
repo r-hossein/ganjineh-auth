@@ -65,7 +65,7 @@ func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, 
     jsonData, err := json.Marshal(data)
     if err != nil {
         fmt.Printf("JSON Marshal error: %v\n", err.Error())
-        return ierror.NewAppError(1101, "can't convert data to json!")
+        return ierror.NewAppError(500,1101, "can't convert data to json!")
     }
     
     fmt.Printf("JSON data: %s\n", string(jsonData))
@@ -76,7 +76,7 @@ func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, 
     err = r.client.Set(ctx, key, jsonData, expiration).Err()
     if err != nil {
         fmt.Printf("Redis SET error: %v\n", err.Error())
-        return ierror.NewAppError(1301, "can't store data in redis!")
+        return ierror.NewAppError(500,1301, "can't store data in redis!")
     }
 
     // Verify the data was stored
@@ -96,15 +96,15 @@ func (r *RedisOTPRepositoryStruct) GetOTP(ctx context.Context, phoneNumber strin
 	data, err := r.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, ierror.NewAppError(1102,"otp code not found!") // OTP not found
+			return nil, ierror.NewAppError(404,1102,"otp code not found!") // OTP not found
 		}
-		return nil, ierror.NewAppError(1301,"can`t get data from redis!")
+		return nil, ierror.NewAppError(500,1301,"can`t get data from redis!")
 	}
 
 	var otpData ent.OTP
 	err = json.Unmarshal([]byte(data), &otpData)
 	if err != nil {
-		return nil, ierror.NewAppError(1101, "can`t convert data to json!")
+		return nil, ierror.NewAppError(500,1101, "can`t convert data to json!")
 	}
 
 	return &otpData, nil
@@ -114,7 +114,7 @@ func (r *RedisOTPRepositoryStruct) DeleteOTP(ctx context.Context, phoneNumber st
 	key := r.getKey(phoneNumber)
 	err := r.client.Del(ctx, key).Err()
 	if err != nil {
-		return ierror.NewAppError(1101,"fiald to delete data from redis!")
+		return ierror.NewAppError(500,1101,"fiald to delete data from redis!")
 	}
 	return nil
 }

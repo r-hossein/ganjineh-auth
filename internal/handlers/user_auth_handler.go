@@ -37,19 +37,19 @@ func (h *AuthHandlerStruct) RequestOTPHandler (c *fiber.Ctx) error {
 	var req models.OTPPhoneRequest
 	
 	if err := c.BodyParser(&req); err != nil{
-		return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
+		return ierror.ErrBadRequest
 	}
 
 	// Validate input
     if err := h.Validate.Struct(req); err != nil {
-        return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
+        return ierror.ErrBadRequest
     }
 
 	ctx := c.Context()
 	
 	res,err := h.AuthService.RequestOTP(ctx, req.PhoneNumber)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(err))
+		return err
 	}
 	return c.JSON(responses.SuccessResponse(res,200))
 }
@@ -58,12 +58,12 @@ func (h *AuthHandlerStruct) VerifyOTPHandler (c *fiber.Ctx) error {
 	var req models.OTPVerifyRequest
 	
 	if err := c.BodyParser(&req); err != nil{
-		return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
+		return ierror.ErrBadRequest
 	}
 
 	// Validate input
     if err := h.Validate.Struct(req); err != nil {
-        return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse(ierror.ErrBadRequest))
+        return ierror.ErrBadRequest
     }
 
 	ctx := c.Context()
@@ -71,7 +71,7 @@ func (h *AuthHandlerStruct) VerifyOTPHandler (c *fiber.Ctx) error {
 	res,err := h.AuthService.VerifyOTP(ctx, &req)
 	
 	if err != nil {
-		return c.Status(fiber.ErrBadGateway.Code).JSON(responses.ErrorResponse(err))
+		return err
 	}
 	return c.JSON(responses.SuccessResponse(res,200))
 }

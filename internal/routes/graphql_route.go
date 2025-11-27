@@ -27,10 +27,10 @@ var GraphQLRoutesSet = wire.NewSet(
 
 func (g *GraphQLRoutesStruct) RegisterRoutes(router fiber.Router) {
     // GraphQL endpoint
-    router.All("/graph", adaptor.HTTPHandler(g.graphQLHandler) )
+    router.All("/graphql", adaptor.HTTPHandler(g.graphQLHandler) )
     
     // GraphQL Playground
     router.Get("/playground", adaptor.HTTPHandler(
-        playground.Handler("GraphQL Playground", "/api/v1/graph"),
+        playground.Handler("GraphQL Playground", "/api/v1/graphql"),
     ))
 }
