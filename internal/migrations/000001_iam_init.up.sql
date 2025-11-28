@@ -8,6 +8,11 @@ CREATE EXTENSION "pgcrypto";
 CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE session_status_type AS ENUM ('active','revoked','updated');
 CREATE TYPE company_type AS ENUM ('online_store', 'physical_store', 'multichannel_store');
+CREATE TYPE gender_enum AS ENUM (
+    'male',
+    'female',
+    'unknown'
+);
 
 CREATE TABLE IF NOT EXISTS roles(
     id SERIAL PRIMARY KEY,
@@ -24,6 +29,7 @@ CREATE TABLE IF NOT EXISTS users(
     email VARCHAR(100),
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
+    gender gender_enum NOT NULL,
     profile_data JSONB DEFAULT '{}'::jsonb,
     password_hash  VARCHAR(256),
     status user_status NOT NULL DEFAULT 'active',
