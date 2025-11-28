@@ -43,4 +43,5 @@ type RefreshTokenClaims struct {
 type CompanyRole struct {
 	CompanyID string `json:"company_id"`
 	RoleName  string `json:"role_name"`
+	Permissions []string `json:"permissions"`
 }
