@@ -2,6 +2,7 @@ package routes
 
 import (
 	"ganjineh-auth/internal/handlers"
+	"ganjineh-auth/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/wire"
@@ -9,15 +10,20 @@ import (
 
 type AuthRoutesStruct struct {
 	handler handlers.AuthHandlerInterface
+	middleware     *middleware.MiddlewareDependencies
 }
 
 type RouteRegistrar interface {
     RegisterRoutes(router fiber.Router)
 }
 
-func NewAuthRoutes(handler handlers.AuthHandlerInterface) *AuthRoutesStruct {
+func NewAuthRoutes(
+	handler handlers.AuthHandlerInterface,
+	middlewareDeps *middleware.MiddlewareDependencies,
+) *AuthRoutesStruct {
 	return &AuthRoutesStruct{
 		handler: handler,
+		middleware:     middlewareDeps,
 	}
 }
 

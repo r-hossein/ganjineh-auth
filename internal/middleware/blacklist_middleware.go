@@ -1,56 +1,51 @@
 package middleware
 
 import (
-	"strings"
+	models "ganjineh-auth/internal/models/entities"
+	"ganjineh-auth/internal/repositories"
+	"ganjineh-auth/pkg/ierror"
 
 	"github.com/gofiber/fiber/v2"
-	"ganjineh-auth/internal/utils"
 	"github.com/google/wire"
 )
 
 type BlackListMiddleware struct {
-	JWT utils.JwtPkgInterface
+	blackListRepo repositories.RedisBlackListRepositoryInterface
 }
 
-func NewBlackListMiddleware(jwt utils.JwtPkgInterface) *BlackListMiddleware {
+func NewBlackListMiddleware(blr repositories.RedisBlackListRepositoryInterface) *BlackListMiddleware {
 	return &BlackListMiddleware{
-		JWT: jwt,
+		blackListRepo: blr,
 	}
 }
 
-var MiddlewareblackListSet = wire.NewSet(
-    NewBlackListMiddleware,
-)
+type BlackListMiddlewareInterface interface {
+	Handler() fiber.Handler
+}
 
+var _ BlackListMiddlewareInterface = (*BlackListMiddleware)(nil)
+
+var MiddlewareBlackListSet = wire.NewSet(
+	NewBlackListMiddleware,
+	wire.Bind(new(BlackListMiddlewareInterface), new(*BlackListMiddleware)),
+)
 func (m *BlackListMiddleware) Handler() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-
-		// Get Authorization header
-		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			return fiber.ErrUnauthorized
+		sid, ok := c.Locals("sid").(string)
+		if !ok || sid == "" {
+					return ierror.ErrInternal
 		}
-
-		// Expect "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return fiber.ErrUnauthorized
-		}
-
-		tokenString := parts[1]
-
-		// Validate Access Token using your JWT service
-		claims, err := m.JWT.ValidateAccessToken(tokenString)
+		
+		data, err := m.blackListRepo.GetSesion(c.Context(), sid)
 		if err != nil {
-			// err is *ierror.AppError
-			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+			return ierror.ErrInternal
 		}
-
-		// Attach claims to context
-		c.Locals("claims", claims)
-		c.Locals("userID", claims.Subject)
-		c.Locals("role", claims.Role)
-
+		
+		if data == string(models.SessionTypeRevoke) {
+			return ierror.ErrTokenRevoked
+		}else if data == string(models.SessionTypeUpdate){
+			return ierror.ErrTokenUpdated
+		}
 		// Continue
 		return c.Next()
 	}

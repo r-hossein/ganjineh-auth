@@ -2,18 +2,24 @@
 package routes
 
 import (
+	"ganjineh-auth/internal/middleware"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/wire"
-    
 )
 
 type RouteContainer struct {
     registrars []RouteRegistrar
+    middlewares *middleware.MiddlewareDependencies
 }
 
-func NewRouteContainer(registrars ...RouteRegistrar) *RouteContainer {
+func NewRouteContainer(
+	middlewareDeps *middleware.MiddlewareDependencies,
+	registrars ...RouteRegistrar,
+) *RouteContainer {
     return &RouteContainer{
         registrars: registrars,
+        middlewares: middlewareDeps,
     }
 }
 

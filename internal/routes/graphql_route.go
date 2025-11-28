@@ -1,21 +1,28 @@
 package routes
 
 import (
-    "github.com/gofiber/fiber/v2"
+	"ganjineh-auth/internal/middleware"
+
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	
-    "github.com/99designs/gqlgen/graphql/handler"
-    "github.com/99designs/gqlgen/graphql/playground"
-    "github.com/google/wire"
+
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/google/wire"
 )
 
 type GraphQLRoutesStruct struct {
     graphQLHandler *handler.Server
+    middleware     *middleware.MiddlewareDependencies
 }
 
-func NewGraphQLRoutes(graphQLHandler *handler.Server) *GraphQLRoutesStruct {
+func NewGraphQLRoutes(
+	graphQLHandler *handler.Server,
+	middlewareDeps *middleware.MiddlewareDependencies,
+) *GraphQLRoutesStruct {
     return &GraphQLRoutesStruct{
         graphQLHandler: graphQLHandler,
+        middleware:     middlewareDeps,
     }
 }
 
@@ -27,7 +34,12 @@ var GraphQLRoutesSet = wire.NewSet(
 
 func (g *GraphQLRoutesStruct) RegisterRoutes(router fiber.Router) {
     // GraphQL endpoint
-    router.All("/graphql", adaptor.HTTPHandler(g.graphQLHandler) )
+    router.All("/graphql",
+    	g.middleware.JWTMiddleware.Handler(),
+     	g.middleware.BlackListMiddleware.Handler(),
+      	g.middleware.PermissionMiddleware.Handler(),
+    	adaptor.HTTPHandler(g.graphQLHandler),
+    )
     
     // GraphQL Playground
     router.Get("/playground", adaptor.HTTPHandler(

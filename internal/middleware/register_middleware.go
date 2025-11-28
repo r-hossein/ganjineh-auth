@@ -8,28 +8,28 @@ import (
 	"github.com/google/wire"
 )
 
-type JWTMiddleware struct {
+type RegisterMiddleware struct {
 	JWT utils.JwtPkgInterface
 }
 
-func NewJWTMiddleware(jwt utils.JwtPkgInterface) *JWTMiddleware {
-	return &JWTMiddleware{
+func NewRegisterMiddleware(jwt utils.JwtPkgInterface) *RegisterMiddleware {
+	return &RegisterMiddleware{
 		JWT: jwt,
 	}
 }
 
-type JWTMiddlewareInterface interface {
+type RegisterMiddlewareInterface interface {
 	Handler() fiber.Handler
 }
 
-var _ JWTMiddlewareInterface = (*JWTMiddleware)(nil)
+var _ RegisterMiddlewareInterface = (*RegisterMiddleware)(nil)
 
-var MiddlewareJwtSet = wire.NewSet(
+var MiddlewareRegisterSet = wire.NewSet(
 	NewJWTMiddleware,
-	wire.Bind(new(JWTMiddlewareInterface), new(*JWTMiddleware)),
+	wire.Bind(new(RegisterMiddlewareInterface), new(*RegisterMiddleware)),
 )
 
-func (m *JWTMiddleware) Handler() fiber.Handler {
+func (m *RegisterMiddleware) Handler() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
 		// Get Authorization header
@@ -46,19 +46,19 @@ func (m *JWTMiddleware) Handler() fiber.Handler {
 
 		tokenString := parts[1]
 
-		// Validate Access Token using your JWT service
-		claims, err := m.JWT.ValidateAccessToken(tokenString)
+		// Validate temp Token using your JWT service
+		claims, err := m.JWT.ValidateTempToken(tokenString)
 		if err != nil {
 			// err is *ierror.AppError
 			return err
 		}
 
 		// Attach claims to context
-		c.Locals("sid", claims.Sid)
 		c.Locals("phone_number",claims.PhoneNumber)
-		c.Locals("role_main", claims.Role)
-		c.Locals("organizations", claims.Organizations)
-		c.Locals("userID", claims.Subject)
+		// c.Locals("sid", claims.Sid)
+		// c.Locals("role_main", claims.Role)
+		// c.Locals("organizations", claims.Organizations)
+		// c.Locals("userID", claims.Subject)
 
 		// Continue
 		return c.Next()

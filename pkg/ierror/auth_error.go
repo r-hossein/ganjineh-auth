@@ -24,8 +24,9 @@ var (
     // Token errors
     ErrTokenInvalid = NewAuthError(401, 1101, "invalid token", "auth_required")
     ErrTokenExpired = NewAuthError(401, 1102, "access token expired", "refresh_required")
-    ErrTokenRevoked = NewAuthError(401, 1201, "token revoked", "revoked")
+    ErrTokenUpdated = NewAuthError(401, 1103, "token updated", "refresh_required")
+    ErrTokenRevoked = NewAuthError(401, 1201, "token revoked", "logout")
 
     // User account errors
-    ErrUserBanned = NewAuthError(401, 1202, "user banned", "banned")
+    ErrUserBanned = NewAuthError(401, 1202, "user banned", "logout")
 )

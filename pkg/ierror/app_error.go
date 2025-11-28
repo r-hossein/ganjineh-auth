@@ -27,7 +27,7 @@ var (
     ErrNotFound     = NewAppError(http.StatusNotFound, 404 ,"not found!")
     ErrUnauthorized = NewAppError(http.StatusUnauthorized, 403 ,"دسترسی غیرمجاز")
     ErrBadRequest   = NewAppError(http.StatusBadRequest, 404 ,"invalid request")
-    ErrInternal     = NewAppError(http.StatusInternalServerError,404, "خطای داخلی سرور")
+    ErrInternal     = NewAppError(http.StatusInternalServerError,504, "خطای داخلی سرور")
     
     // خطاهای دامنه (Domain Errors)
     ErrUserNotFound      = NewAppError(http.StatusNotFound, 404 ,"کاربر یافت نشد")

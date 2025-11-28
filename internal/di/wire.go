@@ -26,7 +26,7 @@ func InitializeUserHandler() (*server.FiberServer, error) {
         utils.OTPPkgSet,
         utils.ValidatorSet,
 
-        middleware.MiddlewareJwtSet,
+        middleware.MiddlewareSet,
         
         database.PostgreSQLSet,
         database.RedisSet,
@@ -35,7 +35,9 @@ func InitializeUserHandler() (*server.FiberServer, error) {
 
         services.AuthServiceSet,
         services.OTPServiceSet,
-
+        services.RewriteRoleServiceSet,
+        services.StartupServiceSet,
+        
         handlers.AuthHandlerSet,
         
         server.ProvideGraphQLHandler,

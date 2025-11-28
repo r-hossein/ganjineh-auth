@@ -196,10 +196,16 @@ func (s *JwtPkgStruct) ValidateRefreshToken(tokenString string) (*ent.RefreshTok
         return nil, ierror.NewAppError(500,1011,err.Error())
     }
 
-    if claims, ok := token.Claims.(*ent.RefreshTokenClaims); ok && token.Valid {
-        return claims, nil
-    }
-    return nil, ierror.NewAppError(500,1101,"invalid access token")
+    claims, ok := token.Claims.(*ent.RefreshTokenClaims)
+	if !ok || !token.Valid {
+		return nil, ierror.NewAppError(403,1101, "invalid access token")
+	}
+
+    if claims.ExpiresAt == nil || time.Now().After(claims.ExpiresAt.Time) {
+		return nil, ierror.NewAppError(403,1102, "token expired")
+	}
+
+    return claims, nil
 }
 
 func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClamis, *ierror.AppError) {
@@ -215,9 +221,15 @@ func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClam
         return nil, ierror.NewAppError(500,1011,err.Error())
     }
 
-    if claims, ok := token.Claims.(*ent.TempTokenClamis); ok && token.Valid {
-        return claims, nil
-    }
-    return nil, ierror.NewAppError(403,1101,"invalid access token")
+    claims, ok := token.Claims.(*ent.TempTokenClamis)
+	if !ok || !token.Valid {
+		return nil, ierror.NewAppError(403,1101, "invalid access token")
+	}
+    
+    if claims.ExpiresAt == nil || time.Now().After(claims.ExpiresAt.Time) {
+		return nil, ierror.NewAppError(403,1102, "token expired")
+	}
+
+    return claims,nil
 }
 

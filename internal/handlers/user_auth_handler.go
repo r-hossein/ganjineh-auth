@@ -14,6 +14,7 @@ import (
 type AuthHandlerInterface interface {
 	RequestOTPHandler(c *fiber.Ctx) error
 	VerifyOTPHandler(c *fiber.Ctx) error
+	RegisterUserHandler(c *fiber.Ctx) error
 }
 
 type AuthHandlerStruct struct {
@@ -55,6 +56,28 @@ func (h *AuthHandlerStruct) RequestOTPHandler (c *fiber.Ctx) error {
 }
 
 func (h *AuthHandlerStruct) VerifyOTPHandler (c *fiber.Ctx) error {
+	var req models.OTPVerifyRequest
+	
+	if err := c.BodyParser(&req); err != nil{
+		return ierror.ErrBadRequest
+	}
+
+	// Validate input
+    if err := h.Validate.Struct(req); err != nil {
+        return ierror.ErrBadRequest
+    }
+
+	ctx := c.Context()
+
+	res,err := h.AuthService.VerifyOTP(ctx, &req)
+	
+	if err != nil {
+		return err
+	}
+	return c.JSON(responses.SuccessResponse(res,200))
+}
+
+func (h *AuthHandlerStruct) RegisterUserHandler (c *fiber.Ctx) error {
 	var req models.OTPVerifyRequest
 	
 	if err := c.BodyParser(&req); err != nil{

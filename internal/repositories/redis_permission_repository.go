@@ -15,6 +15,7 @@ import (
 type RedisPermissionRepositoryInterface interface {
 	StorePermission(ctx context.Context, data *ent.Role) *ierror.AppError
 	GetPermission(ctx context.Context, roleName string) (*ent.Role, *ierror.AppError)
+	ClearAllRoles(ctx context.Context) *ierror.AppError 
 }
 
 type RedisPermissionRepositoryStruct struct {
@@ -36,11 +37,10 @@ var RedisPermissionRepositorySet = wire.NewSet(
 var _ RedisPermissionRepositoryInterface =(*RedisPermissionRepositoryStruct)(nil)
 
 func (r *RedisPermissionRepositoryStruct) getKey(RoleName string) string {
-	return r.prefix + RoleName
+	return r.prefix + RoleName +":permissions"
 }
 
 func (r *RedisPermissionRepositoryStruct) StorePermission(ctx context.Context, data *ent.Role) *ierror.AppError {
-	
  	jsonData, err := json.Marshal(data)
     if err != nil {
         fmt.Printf("JSON Marshal error: %v\n", err.Error())
@@ -75,4 +75,17 @@ func (r *RedisPermissionRepositoryStruct) GetPermission(ctx context.Context, rol
 	}
 	
 	return &roleData, nil
+}
+
+func (r *RedisPermissionRepositoryStruct) ClearAllRoles(ctx context.Context) *ierror.AppError {
+    key := r.prefix+"*:permissions"
+	iter := r.client.Scan(ctx, 0, key, 0).Iterator()
+
+    for iter.Next(ctx) {
+        if err := r.client.Del(ctx, iter.Val()).Err(); err != nil {
+            return ierror.NewAppError(500,1304,"error in rewite role")
+        }
+    }
+
+    return nil
 }
