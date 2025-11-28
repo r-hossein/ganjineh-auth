@@ -39,7 +39,10 @@ func (h *AuthRoutesStruct) RegisterRoutes(router fiber.Router) {
 	otp.Post("/request",h.handler.RequestOTPHandler)
 	otp.Post("/verify",h.handler.VerifyOTPHandler)
 
-	// auth.Post("/register",)
+	auth.Post("/register",
+	h.middleware.RegisterMiddleware.Handler(),
+	h.handler.RegisterUserHandler,
+	)
 	
 	// auth.Get("/refresh",)
 	

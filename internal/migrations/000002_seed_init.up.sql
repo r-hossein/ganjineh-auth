@@ -12,5 +12,5 @@ INSERT INTO roles (id, name, permission_codes, is_system_role) VALUES
     (9, 'SALER', '{}', FALSE)
 ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO users (no_id,phone_number,first_name,last_name,role_id,is_phone_verified) 
-VALUES ('0024182583','09167603497','hossein','rajabi',1,TRUE);
+INSERT INTO users (no_id,phone_number,first_name,last_name,gender,role_id,is_phone_verified) 
+VALUES ('0024182583','09167603497','hossein','rajabi','male',1,TRUE);

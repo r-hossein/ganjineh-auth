@@ -25,17 +25,18 @@ func (q *Queries) Activeuser(ctx context.Context, id pgtype.UUID) error {
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (phone_number, first_name, last_name, role_id, is_phone_verified)
-VALUES ($1, $2, $3, $4, true)
+INSERT INTO users (phone_number, first_name, last_name, gender, role_id, is_phone_verified)
+VALUES ($1, $2, $3, $4, $5, true)
 ON CONFLICT (phone_number) DO NOTHING
 RETURNING id, phone_number, first_name, last_name, role_id
 `
 
 type CreateUserParams struct {
-	PhoneNumber string `json:"phone_number"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	RoleID      int32  `json:"role_id"`
+	PhoneNumber string     `json:"phone_number"`
+	FirstName   string     `json:"first_name"`
+	LastName    string     `json:"last_name"`
+	Gender      GenderEnum `json:"gender"`
+	RoleID      int32      `json:"role_id"`
 }
 
 type CreateUserRow struct {
@@ -51,6 +52,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		arg.PhoneNumber,
 		arg.FirstName,
 		arg.LastName,
+		arg.Gender,
 		arg.RoleID,
 	)
 	var i CreateUserRow
@@ -109,6 +111,20 @@ func (q *Queries) GetAllRoles(ctx context.Context) ([]GetAllRolesRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getRoleByID = `-- name: GetRoleByID :one
+SELECT 
+    name
+FROM roles
+WHERE id = $1
+`
+
+func (q *Queries) GetRoleByID(ctx context.Context, id int32) (string, error) {
+	row := q.db.QueryRow(ctx, getRoleByID, id)
+	var name string
+	err := row.Scan(&name)
+	return name, err
 }
 
 const getSession = `-- name: GetSession :one

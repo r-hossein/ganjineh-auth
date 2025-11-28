@@ -3,8 +3,9 @@ package middleware
 import (
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
 	"ganjineh-auth/internal/utils"
+
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/wire"
 )
 
@@ -25,7 +26,7 @@ type RegisterMiddlewareInterface interface {
 var _ RegisterMiddlewareInterface = (*RegisterMiddleware)(nil)
 
 var MiddlewareRegisterSet = wire.NewSet(
-	NewJWTMiddleware,
+	NewRegisterMiddleware,
 	wire.Bind(new(RegisterMiddlewareInterface), new(*RegisterMiddleware)),
 )
 
@@ -52,13 +53,8 @@ func (m *RegisterMiddleware) Handler() fiber.Handler {
 			// err is *ierror.AppError
 			return err
 		}
-
 		// Attach claims to context
 		c.Locals("phone_number",claims.PhoneNumber)
-		// c.Locals("sid", claims.Sid)
-		// c.Locals("role_main", claims.Role)
-		// c.Locals("organizations", claims.Organizations)
-		// c.Locals("userID", claims.Subject)
 
 		// Continue
 		return c.Next()

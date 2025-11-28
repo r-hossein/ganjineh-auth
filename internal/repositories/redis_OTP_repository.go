@@ -61,15 +61,13 @@ func (r *RedisOTPRepositoryStruct) StoreOTP(ctx context.Context, data *ent.OTP, 
     }
 
     // Verify the data was stored
-    val, err := r.client.Get(ctx, key).Result()
-    if err != nil {
-        fmt.Printf("Redis GET verification error: %v\n", err.Error())
-    } else {
-        fmt.Printf("Data verified in Redis: %s\n", val)
-    }
-
-    fmt.Printf("StoreOTP completed successfully\n")
-    return nil
+    // val, err := r.client.Get(ctx, key).Result()
+    // if err != nil {
+    //     return  ierror.NewAppError(500,1301,err.Error())
+    // } else {
+    //     return nil
+    // }
+	return  nil
 }
 
 func (r *RedisOTPRepositoryStruct) GetOTP(ctx context.Context, phoneNumber string) (*ent.OTP, *ierror.AppError) {

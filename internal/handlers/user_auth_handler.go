@@ -78,7 +78,7 @@ func (h *AuthHandlerStruct) VerifyOTPHandler (c *fiber.Ctx) error {
 }
 
 func (h *AuthHandlerStruct) RegisterUserHandler (c *fiber.Ctx) error {
-	var req models.OTPVerifyRequest
+	var req models.RegisterUserFirstRequest
 	
 	if err := c.BodyParser(&req); err != nil{
 		return ierror.ErrBadRequest
@@ -91,7 +91,7 @@ func (h *AuthHandlerStruct) RegisterUserHandler (c *fiber.Ctx) error {
 
 	ctx := c.Context()
 
-	res,err := h.AuthService.VerifyOTP(ctx, &req)
+	res,err := h.AuthService.Register(ctx, &req)
 	
 	if err != nil {
 		return err

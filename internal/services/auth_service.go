@@ -23,7 +23,7 @@ import (
 type AuthServiceInterface interface {
     RequestOTP(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse, *ierror.AppError)
     VerifyOTP(ctx context.Context, data *req.OTPVerifyRequest) (*res.OTPVerifyResponse, *ierror.AppError)
-    // Register(tempToken string, userData *UserRegistration) (*AuthResult, ierror)
+    Register(ctx context.Context, data *req.RegisterUserFirstRequest) (*res.OTPVerifyResponse, *ierror.AppError)
     // RefreshToken(refreshToken string) (*TokenPair, ierror)
     // Logout(sessionID uint, userID uuid.UUID) ierror
     // GetUserOrganizations(userID uuid.UUID) ([]Organization, ierror)
@@ -146,4 +146,64 @@ func (s *AuthServiceStruct) VerifyOTP(ctx context.Context, data *req.OTPVerifyRe
         Role: user.MainRoleName.(string),
         PhoneNumber: user.PhoneNumber.(string),
     },nil
+}
+
+func (s *AuthServiceStruct) Register(ctx context.Context, data *req.RegisterUserFirstRequest) (*res.OTPVerifyResponse, *ierror.AppError){
+
+    phoneNumber := ctx.Value("phone_number")
+
+    user, err := s.userRepo.CreateUser(ctx, db.CreateUserParams{
+        PhoneNumber: phoneNumber.(string),
+        FirstName: data.FirstName,
+        LastName: data.LastName,
+        Gender: db.GenderEnum(data.Gender),
+        RoleID: 3,
+    })
+
+    if err != nil {
+        return nil, ierror.NewAppError(400,1100,err.Error())
+    }
+
+    role, err := s.userRepo.GetRoleByID(ctx,user.RoleID)
+    if err != nil {
+        return nil, ierror.NewAppError(400,1100,err.Error())
+    }
+
+    sid := uuid.New()
+    tokens, er := s.jwtUtil.GenerateTokenPair(&utils.TokenOptions{
+        UserID: user.ID.String(),
+        Sid: sid.String(),
+        PhoneNumber: user.PhoneNumber,
+        Role: role,
+        Orgs: []ent.CompanyRole{},
+    })
+    if er != nil {
+        return nil, er
+    }
+
+    ct := context.Background()
+
+    s.userRepo.InsertUserSession(ct,db.InsertUserSessionParams{
+        ID: pgtype.UUID{
+            Bytes: sid, 
+            Valid: true,
+        },
+        UserID: user.ID,
+        RefreshTokenHash: tokens.RefreshToken,
+        RefreshTokenCreatedAt: time.Now(),
+        RefreshTokenExpiresAt: time.Unix(tokens.ExpiresIn,0),
+    })
+
+    return &res.OTPVerifyResponse{
+        AccessToken: tokens.AccessToken,
+        RefreshToken: tokens.RefreshToken,
+        ExpiresAt: tokens.ExpiresIn,
+        UserExists: true,
+        FirstName: user.FirstName,
+        LastName: user.LastName,
+        UserID: user.ID.String(),
+        Role: role,
+        PhoneNumber: user.PhoneNumber,
+    },nil
+
 }

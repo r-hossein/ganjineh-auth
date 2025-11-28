@@ -40,8 +40,8 @@ WHERE u.phone_number = $1
 GROUP BY u.id, u.status, r.name;
 
 -- name: CreateUser :one
-INSERT INTO users (phone_number, first_name, last_name, role_id, is_phone_verified)
-VALUES ($1, $2, $3, $4, true)
+INSERT INTO users (phone_number, first_name, last_name, gender, role_id, is_phone_verified)
+VALUES ($1, $2, $3, $4, $5, true)
 ON CONFLICT (phone_number) DO NOTHING
 RETURNING id, phone_number, first_name, last_name, role_id;
 
@@ -140,3 +140,9 @@ SELECT
     is_system_role
 FROM roles
 ORDER BY id;
+
+-- name: GetRoleByID :one
+SELECT 
+    name
+FROM roles
+WHERE id = $1;

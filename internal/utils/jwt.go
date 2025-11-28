@@ -209,7 +209,7 @@ func (s *JwtPkgStruct) ValidateRefreshToken(tokenString string) (*ent.RefreshTok
 }
 
 func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClamis, *ierror.AppError) {
-    secret := s.getSecret(ent.TokenTypeAccess)
+    secret := s.getSecret(ent.TokenTypeTemp)
 
     token, err := jwt.ParseWithClaims(tokenString, &ent.TempTokenClamis{}, func(token *jwt.Token) (interface{}, error) {
         if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -223,7 +223,7 @@ func (s *JwtPkgStruct) ValidateTempToken(tokenString string) (*ent.TempTokenClam
 
     claims, ok := token.Claims.(*ent.TempTokenClamis)
 	if !ok || !token.Valid {
-		return nil, ierror.NewAppError(403,1101, "invalid access token")
+		return nil, ierror.NewAppError(403,1101, "invalid temp token")
 	}
     
     if claims.ExpiresAt == nil || time.Now().After(claims.ExpiresAt.Time) {

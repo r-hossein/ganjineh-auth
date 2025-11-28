@@ -55,6 +55,49 @@ func (ns NullCompanyType) Value() (driver.Value, error) {
 	return string(ns.CompanyType), nil
 }
 
+type GenderEnum string
+
+const (
+	GenderEnumMale    GenderEnum = "male"
+	GenderEnumFemale  GenderEnum = "female"
+	GenderEnumUnknown GenderEnum = "unknown"
+)
+
+func (e *GenderEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = GenderEnum(s)
+	case string:
+		*e = GenderEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for GenderEnum: %T", src)
+	}
+	return nil
+}
+
+type NullGenderEnum struct {
+	GenderEnum GenderEnum `json:"gender_enum"`
+	Valid      bool       `json:"valid"` // Valid is true if GenderEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullGenderEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.GenderEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.GenderEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullGenderEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.GenderEnum), nil
+}
+
 type SessionStatusType string
 
 const (
@@ -170,6 +213,7 @@ type User struct {
 	Email             *string            `json:"email"`
 	FirstName         string             `json:"first_name"`
 	LastName          string             `json:"last_name"`
+	Gender            GenderEnum         `json:"gender"`
 	ProfileData       []byte             `json:"profile_data"`
 	PasswordHash      *string            `json:"password_hash"`
 	Status            UserStatus         `json:"status"`
