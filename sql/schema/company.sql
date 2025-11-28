@@ -1,6 +1,3 @@
--- +migrate Up
-
-BEGIN;
 
 CREATE TYPE company_type AS ENUM ('online_store', 'physical_store', 'multichannel_store');
 

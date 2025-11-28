@@ -1,7 +1,6 @@
 
 CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
 CREATE TYPE session_status_type AS ENUM ('active','revoked','updated');
-CREATE TYPE company_type AS ENUM ('online_store', 'physical_store', 'multichannel_store');
 
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,

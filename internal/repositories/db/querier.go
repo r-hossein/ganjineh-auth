@@ -14,6 +14,7 @@ type Querier interface {
 	Activeuser(ctx context.Context, id pgtype.UUID) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeactivateUser(ctx context.Context, id pgtype.UUID) error
+	GetAllRoles(ctx context.Context) ([]GetAllRolesRow, error)
 	GetSession(ctx context.Context, arg GetSessionParams) (GetSessionRow, error)
 	GetUserActiveSessions(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error)
 	GetUserByPhone(ctx context.Context, phoneNumber string) (GetUserByPhoneRow, error)

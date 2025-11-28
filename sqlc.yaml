@@ -1,8 +1,11 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: -"sql/queries/iam_queries.sql"
-    schema: -"sql/schema/iam.sql"
+    queries: 
+      - "sql/queries/iam_queries.sql"
+    schema: 
+      - "sql/schema/iam.sql"
+      - "sql/schema/company.sql"
     gen:
       go:
         package: "db"

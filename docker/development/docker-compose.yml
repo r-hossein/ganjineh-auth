@@ -20,7 +20,8 @@ services:
     image: migrate/migrate:latest
     restart: "no"
     depends_on:
-      - psql_bp
+      psql_bp:
+        condition: service_healthy
     volumes:
       - ../../internal/migrations:/migrations
     command: [

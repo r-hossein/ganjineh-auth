@@ -132,3 +132,11 @@ UPDATE user_sessions
 SET 
     status = 'updated'
 WHERE user_id = $1 AND status = 'active';
+
+-- name: GetAllRoles :many
+SELECT
+    name,
+    permission_codes,
+    is_system_role
+FROM roles
+ORDER BY id;

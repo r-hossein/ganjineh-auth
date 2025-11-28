@@ -2,9 +2,9 @@
 
 BEGIN;
 
-CREATE TYPE IF NOT EXISTS value_tier_type AS ENUM ('requested', 'approved', 'rejected', 'completed', 'cancelled');
+CREATE TYPE value_tier_type AS ENUM ('requested', 'approved', 'rejected', 'completed', 'cancelled');
 
-CREATE TYPE IF NOT EXISTS behavior_segment_type AS ENUM ('requested', 'approved', 'rejected', 'completed', 'cancelled');
+CREATE TYPE behavior_segment_type AS ENUM ('requested', 'approved', 'rejected', 'completed', 'cancelled');
 
 CREATE TABLE IF NOT EXISTS customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
