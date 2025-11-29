@@ -197,6 +197,20 @@ type Company struct {
 	UpdatedAt   time.Time   `json:"updated_at"`
 }
 
+type Error struct {
+	ID          int64            `json:"id"`
+	HttpCode    int32            `json:"http_code"`
+	StatusCode  int32            `json:"status_code"`
+	Message     string           `json:"message"`
+	StackTrace  *string          `json:"stack_trace"`
+	Endpoint    *string          `json:"endpoint"`
+	Method      *string          `json:"method"`
+	QueryParams []byte           `json:"query_params"`
+	RequestBody []byte           `json:"request_body"`
+	IpAddress   *string          `json:"ip_address"`
+	CreatedAt   pgtype.Timestamp `json:"created_at"`
+}
+
 type Role struct {
 	ID              int32              `json:"id"`
 	Name            string             `json:"name"`

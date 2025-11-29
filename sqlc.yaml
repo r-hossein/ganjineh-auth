@@ -3,9 +3,11 @@ sql:
   - engine: "postgresql"
     queries: 
       - "sql/queries/iam_queries.sql"
+      - "sql/queries/errors_queries.sql"
     schema: 
       - "sql/schema/iam.sql"
       - "sql/schema/company.sql"
+      - "sql/schema/error.sql"
     gen:
       go:
         package: "db"

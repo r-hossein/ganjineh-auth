@@ -19,6 +19,7 @@ type Querier interface {
 	GetSession(ctx context.Context, arg GetSessionParams) (GetSessionRow, error)
 	GetUserActiveSessions(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error)
 	GetUserByPhone(ctx context.Context, phoneNumber string) (GetUserByPhoneRow, error)
+	InsertError(ctx context.Context, arg InsertErrorParams) error
 	InsertUserSession(ctx context.Context, arg InsertUserSessionParams) error
 	RevokeAllUserSessions(ctx context.Context, arg RevokeAllUserSessionsParams) error
 	RevokeSession(ctx context.Context, arg RevokeSessionParams) error
