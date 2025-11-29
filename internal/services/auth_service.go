@@ -24,7 +24,7 @@ type AuthServiceInterface interface {
     RequestOTP(ctx context.Context, phoneNumber string) (*res.OTPLoginResponse, *ierror.AppError)
     VerifyOTP(ctx context.Context, data *req.OTPVerifyRequest) (*res.OTPVerifyResponse, *ierror.AppError)
     Register(ctx context.Context, data *req.RegisterUserFirstRequest) (*res.OTPVerifyResponse, *ierror.AppError)
-    // RefreshToken(refreshToken string) (*TokenPair, ierror)
+    RefreshToken(ctx context.Context) (*res.RefreshToken, *ierror.AppError)
     // Logout(sessionID uint, userID uuid.UUID) ierror
     // GetUserOrganizations(userID uuid.UUID) ([]Organization, ierror)
 }
@@ -34,6 +34,7 @@ type AuthServiceStruct struct {
     userRepo    *db.Queries
     jwtUtil     utils.JwtPkgInterface
     otpServ     OTPServiceInterface
+    bgService   BackgroundServiceInterface
 }
 
 func NewAuthService(
@@ -41,12 +42,14 @@ func NewAuthService(
     userRepo *db.Queries,
     jwtUtil utils.JwtPkgInterface,
     otpRepo repositories.RedisOTPRepositoryInterface,
+    bgServ  BackgroundServiceInterface,
 ) AuthServiceInterface {
     return &AuthServiceStruct{
         otpServ: otpService,
         userRepo:   userRepo,
         jwtUtil:    jwtUtil,
         otpRepo: otpRepo,
+        bgService: bgServ,
     }
 }
 
@@ -150,10 +153,10 @@ func (s *AuthServiceStruct) VerifyOTP(ctx context.Context, data *req.OTPVerifyRe
 
 func (s *AuthServiceStruct) Register(ctx context.Context, data *req.RegisterUserFirstRequest) (*res.OTPVerifyResponse, *ierror.AppError){
 
-    phoneNumber := ctx.Value("phone_number")
-
+    phoneNumber := ctx.Value("phone_number").(string)
+    
     user, err := s.userRepo.CreateUser(ctx, db.CreateUserParams{
-        PhoneNumber: phoneNumber.(string),
+        PhoneNumber: phoneNumber,
         FirstName: data.FirstName,
         LastName: data.LastName,
         Gender: db.GenderEnum(data.Gender),
@@ -206,4 +209,95 @@ func (s *AuthServiceStruct) Register(ctx context.Context, data *req.RegisterUser
         PhoneNumber: user.PhoneNumber,
     },nil
 
+}
+
+func (s *AuthServiceStruct) RefreshToken(ctx context.Context) (*res.RefreshToken, *ierror.AppError)  {
+    
+    phoneNumber, ok := ctx.Value("phone_number").(string)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid phone number")
+    }
+    
+    refreshToken, ok := ctx.Value("token").(string)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid refresh token")
+    }
+    
+    sid, ok := ctx.Value("sid").(string)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid session id")
+    }
+    
+    role, ok := ctx.Value("role_main").(string)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid role")
+    }
+    
+    orgs, ok := ctx.Value("organizations").([]ent.CompanyRole)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid organizations")
+    }
+    
+    userId, ok := ctx.Value("userID").(string)
+    if !ok {
+        return nil, ierror.NewAppError(500, 1100, "invalid user id")
+    }
+
+    // Convert string IDs to UUID
+    sessionUUID, err := uuid.Parse(sid)
+    if err != nil {
+        return nil, ierror.NewAppError(500, 1100, "invalid session id format")
+    }
+    
+    userUUID, err := uuid.Parse(userId)
+    if err != nil {
+        return nil, ierror.NewAppError(500, 1100, "invalid user id format")
+    }
+    
+    session, err := s.userRepo.GetSession(ctx,db.GetSessionParams{
+        ID: pgtype.UUID{
+            Bytes: sessionUUID, 
+            Valid: true,
+        },
+        UserID: pgtype.UUID{
+            Bytes: userUUID, 
+            Valid: true,
+        },
+    })
+
+    if err != nil {
+        return nil, ierror.NewAppError(500,1303,err.Error())
+    }
+    if session.Status == db.SessionStatusTypeRevoked {
+        return nil, ierror.NewAppError(403,1104,"invalid refreshtoken")
+    }
+    if session.RefreshTokenHash != refreshToken {
+        return nil, ierror.NewAppError(403,1102,"invalid refreshtoken")
+    }else if time.Now().After(session.RefreshTokenExpiresAt) {
+        return nil, ierror.NewAppError(403,1103, "token expired")
+    }
+
+    data , er := s.jwtUtil.GenerateTokenPair(&utils.TokenOptions{
+        UserID: userId,
+        Sid: sid,
+        PhoneNumber: phoneNumber,
+        Role: role,
+        Orgs: orgs,
+    })
+    if er != nil {
+        return nil, er
+    }
+    
+    s.bgService.UpdateSession(context.Background(), &BackgroundUpdateSessionParams{
+        ID: session.ID,
+        RefeshToken: data.RefreshToken,
+        ExpiresAt: data.ExpiresIn,
+        LastActive: time.Now(),
+    })
+    
+    return &res.RefreshToken{
+        RefreshToken: data.RefreshToken,
+        AccessToken: data.AccessToken,
+        ExpiresAt: data.ExpiresIn,
+    } , nil
 }

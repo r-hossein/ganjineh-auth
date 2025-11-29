@@ -37,7 +37,8 @@ func InitializeUserHandler() (*server.FiberServer, error) {
         services.OTPServiceSet,
         services.RewriteRoleServiceSet,
         services.StartupServiceSet,
-        
+        services.BackgroundServiceSet,
+
         handlers.AuthHandlerSet,
         
         server.ProvideGraphQLHandler,

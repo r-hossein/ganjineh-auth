@@ -11,18 +11,20 @@ import (
 
 const insertError = `-- name: InsertError :exec
 INSERT INTO errors (http_code,status_code, message, stack_trace, endpoint, method, query_params,request_body)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+VALUES ($1, $2, $3, $4, $5, $6,
+    COALESCE($7, '{}'::jsonb),
+    COALESCE($8, '{}'::jsonb))
 `
 
 type InsertErrorParams struct {
-	HttpCode    int32   `json:"http_code"`
-	StatusCode  int32   `json:"status_code"`
-	Message     string  `json:"message"`
-	StackTrace  *string `json:"stack_trace"`
-	Endpoint    *string `json:"endpoint"`
-	Method      *string `json:"method"`
-	QueryParams []byte  `json:"query_params"`
-	RequestBody []byte  `json:"request_body"`
+	HttpCode   int32       `json:"http_code"`
+	StatusCode int32       `json:"status_code"`
+	Message    string      `json:"message"`
+	StackTrace *string     `json:"stack_trace"`
+	Endpoint   *string     `json:"endpoint"`
+	Method     *string     `json:"method"`
+	Column7    interface{} `json:"column_7"`
+	Column8    interface{} `json:"column_8"`
 }
 
 func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error {
@@ -33,8 +35,8 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 		arg.StackTrace,
 		arg.Endpoint,
 		arg.Method,
-		arg.QueryParams,
-		arg.RequestBody,
+		arg.Column7,
+		arg.Column8,
 	)
 	return err
 }

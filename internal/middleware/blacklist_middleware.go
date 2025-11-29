@@ -33,9 +33,8 @@ func (m *BlackListMiddleware) Handler() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		sid, ok := c.Locals("sid").(string)
 		if !ok || sid == "" {
-					return ierror.ErrInternal
+			return ierror.ErrInternal
 		}
-		
 		data, err := m.blackListRepo.GetSesion(c.Context(), sid)
 		if err != nil {
 			return ierror.ErrInternal
