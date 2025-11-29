@@ -8,18 +8,26 @@ type AppError struct {
     HttpStatus int
     Code    int
     Message string
+    StackTrace string
 }
 
 func (e *AppError) Error() string {
     return e.Message
 }
 
-func NewAppError(httpStatus int, code int, message string) *AppError {
+func NewAppError(httpStatus int, code int, message string, stack ...string) *AppError {
+    
+    stackTrace := ""
+    if len(stack) > 0 && stack[0] != "" {
+        stackTrace = stack[0]
+    }
     return &AppError{
         HttpStatus: httpStatus,
         Code:    code,
         Message: message,
+        StackTrace: stackTrace,
     }
+    
 }
 
 // خطاهای رایج

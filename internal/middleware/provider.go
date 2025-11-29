@@ -10,6 +10,7 @@ type MiddlewareDependencies struct {
 	BlackListMiddleware  BlackListMiddlewareInterface  
 	PermissionMiddleware PermissionMiddlewareInterface
 	RegisterMiddleware	 RegisterMiddlewareInterface
+	RefreshMiddleware	 RefreshtokenMiddlewareInterface
 }
 
 func NewMiddlewareDependencies(
@@ -17,12 +18,14 @@ func NewMiddlewareDependencies(
 	blacklist BlackListMiddlewareInterface,
 	permission PermissionMiddlewareInterface,
 	register	RegisterMiddlewareInterface,
+	refresh RefreshtokenMiddlewareInterface,
 ) *MiddlewareDependencies {
 	return &MiddlewareDependencies{
 		JWTMiddleware:        jwt,
 		BlackListMiddleware:  blacklist,
 		PermissionMiddleware: permission,
 		RegisterMiddleware: register,
+		RefreshMiddleware: refresh,
 	}
 }
 
@@ -32,4 +35,5 @@ var MiddlewareSet = wire.NewSet(
 	MiddlewareBlackListSet,
 	MiddlewarePermissionSet,
 	MiddlewareRegisterSet,
+	MiddlewareRefreshtokenSet,
 )

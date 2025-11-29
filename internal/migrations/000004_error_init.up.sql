@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS errors (
     message TEXT NOT NULL,
     stack_trace TEXT,
     endpoint VARCHAR(255),
-    method VARCHAR(10),
     query_params JSONB NOT NULL DEFAULT '{}'::jsonb,
     request_body JSONB NOT NULL DEFAULT '{}'::jsonb,
     ip_address VARCHAR(45),

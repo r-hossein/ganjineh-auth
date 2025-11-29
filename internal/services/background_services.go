@@ -14,7 +14,7 @@ import (
 
 type BackgroundUpdateSessionParams struct {
 	ID pgtype.UUID
-	RefeshToken string
+	RefreshToken string
 	ExpiresAt int64
 	LastActive time.Time
 }
@@ -50,7 +50,7 @@ func (s *BackgroundServiceStruct) UpdateSession(ctx context.Context, data *Backg
 	go func() {
 		err := s.userRepo.UpdateSession(ctx, db.UpdateSessionParams{
 		ID: data.ID,
-		RefreshTokenHash: data.RefeshToken,
+		RefreshTokenHash: data.RefreshToken,
 		RefreshTokenCreatedAt: time.Now(),
 		RefreshTokenExpiresAt: time.Unix(data.ExpiresAt,0),
 		LastActive: data.LastActive,
@@ -64,7 +64,6 @@ func (s *BackgroundServiceStruct) UpdateSession(ctx context.Context, data *Backg
 				Message: err.Error(),
 				StackTrace: &stack,
 				Endpoint: nil,
-				Method: nil,
 			})
 		}
 	}()

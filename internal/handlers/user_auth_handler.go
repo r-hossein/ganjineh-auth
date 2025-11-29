@@ -15,6 +15,7 @@ type AuthHandlerInterface interface {
 	RequestOTPHandler(c *fiber.Ctx) error
 	VerifyOTPHandler(c *fiber.Ctx) error
 	RegisterUserHandler(c *fiber.Ctx) error
+	RefreshTokenHandler(c *fiber.Ctx) error
 }
 
 type AuthHandlerStruct struct {
@@ -97,4 +98,13 @@ func (h *AuthHandlerStruct) RegisterUserHandler (c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(responses.SuccessResponse(res,200))
+}
+
+func (h* AuthHandlerStruct) RefreshTokenHandler(c *fiber.Ctx) error{
+
+	data, err := h.AuthService.RefreshToken(c.Context())
+	if err != nil {
+		return err
+	}
+	return c.JSON(responses.SuccessResponse(data,200))
 }

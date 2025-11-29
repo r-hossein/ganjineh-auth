@@ -10,10 +10,9 @@ import (
 )
 
 const insertError = `-- name: InsertError :exec
-INSERT INTO errors (http_code,status_code, message, stack_trace, endpoint, method, query_params,request_body)
-VALUES ($1, $2, $3, $4, $5, $6,
-    COALESCE($7, '{}'::jsonb),
-    COALESCE($8, '{}'::jsonb))
+INSERT INTO errors (http_code,status_code, message, stack_trace, endpoint, request_body)
+VALUES ($1, $2, $3, $4, $5,
+    COALESCE($6, '{}'::jsonb))
 `
 
 type InsertErrorParams struct {
@@ -22,9 +21,7 @@ type InsertErrorParams struct {
 	Message    string      `json:"message"`
 	StackTrace *string     `json:"stack_trace"`
 	Endpoint   *string     `json:"endpoint"`
-	Method     *string     `json:"method"`
-	Column7    interface{} `json:"column_7"`
-	Column8    interface{} `json:"column_8"`
+	Column6    interface{} `json:"column_6"`
 }
 
 func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error {
@@ -34,9 +31,7 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 		arg.Message,
 		arg.StackTrace,
 		arg.Endpoint,
-		arg.Method,
-		arg.Column7,
-		arg.Column8,
+		arg.Column6,
 	)
 	return err
 }

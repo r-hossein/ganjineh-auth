@@ -204,10 +204,7 @@ type Error struct {
 	Message     string           `json:"message"`
 	StackTrace  *string          `json:"stack_trace"`
 	Endpoint    *string          `json:"endpoint"`
-	Method      *string          `json:"method"`
-	QueryParams []byte           `json:"query_params"`
 	RequestBody []byte           `json:"request_body"`
-	IpAddress   *string          `json:"ip_address"`
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
 }
 

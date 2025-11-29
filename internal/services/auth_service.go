@@ -290,7 +290,7 @@ func (s *AuthServiceStruct) RefreshToken(ctx context.Context) (*res.RefreshToken
     
     s.bgService.UpdateSession(context.Background(), &BackgroundUpdateSessionParams{
         ID: session.ID,
-        RefeshToken: data.RefreshToken,
+        RefreshToken: data.RefreshToken,
         ExpiresAt: data.ExpiresIn,
         LastActive: time.Now(),
     })

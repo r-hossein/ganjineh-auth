@@ -44,7 +44,10 @@ func (h *AuthRoutesStruct) RegisterRoutes(router fiber.Router) {
 	h.handler.RegisterUserHandler,
 	)
 	
-	// auth.Get("/refresh",)
+	auth.Get("/refresh",
+	h.middleware.RefreshMiddleware.Handler(),
+	h.handler.RefreshTokenHandler,
+	)
 	
 	// auth.Post("/logout",)
 	// auth.Post("/logoutall",)
